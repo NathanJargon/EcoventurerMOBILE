@@ -11,6 +11,7 @@ import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
 import StoreScreen from './screens/StoreScreen';
 import SignUpScreen2 from './screens/SignUpScreen2';
 import SettingsScreen from './screens/SettingsScreen';
+import GameScreen from './screens/Game';
 
 const Stack = createStackNavigator();
 
@@ -56,6 +57,11 @@ export default function App() {
         <Stack.Screen
           name="Settings"
           component={SettingsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="Game" 
+          component={GameScreen} 
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

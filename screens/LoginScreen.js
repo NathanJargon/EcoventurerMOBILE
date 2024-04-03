@@ -23,8 +23,18 @@ export default function LoginScreen({ navigation }) {
       }
     };
     checkLogin();
+
+
+    const authListener = firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        navigation.navigate('Home');
+      }
+    });
+
+    return () => authListener();
   }, []);
 
+  
   const onLogin = () => {
     firebase
       .auth()

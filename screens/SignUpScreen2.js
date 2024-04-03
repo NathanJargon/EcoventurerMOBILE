@@ -66,6 +66,8 @@ export default function SignUpScreen2({ navigation }) {
             points,
             purchasedItems,
             password,
+            levelUnlocked: 0,
+            levelProgress: [0, 0, 0],
           };
           const usersRef = firebase.firestore().collection('users');
           usersRef
