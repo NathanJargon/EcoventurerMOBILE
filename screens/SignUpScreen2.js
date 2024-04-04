@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: height * 0.04,
+    marginTop: height * 0.025,
   },
   signUpText: {
     marginLeft: 5,
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#4fb2aa',
     padding: 10,
     borderRadius: 10,
-    marginTop: height * 0.03,
+    marginTop: height * 0.01,
     elevation: 5,
     width: '80%',
     alignSelf: 'center',

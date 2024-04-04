@@ -11,7 +11,8 @@ import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
 import StoreScreen from './screens/StoreScreen';
 import SignUpScreen2 from './screens/SignUpScreen2';
 import SettingsScreen from './screens/SettingsScreen';
-import GameScreen from './screens/Game';
+import GameScreen from './screens/GameScreen';
+import LandPollution from './screens/Levels/LandPollution';
 
 const Stack = createStackNavigator();
 
@@ -62,6 +63,11 @@ export default function App() {
         <Stack.Screen 
           name="Game" 
           component={GameScreen} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="Land Pollution" 
+          component={LandPollution} 
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

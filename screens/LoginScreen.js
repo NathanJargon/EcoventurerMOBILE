@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: height * 0.1,
+    marginTop: height * 0.05,
   },
   signUpText: {
     marginLeft: 5,
