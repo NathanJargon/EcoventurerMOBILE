@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, Button, Image, View, Platform, Dimensions, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
+import { firebase } from './FirebaseConfig';
 
 const { width, height } = Dimensions.get('window');
 
@@ -24,19 +25,66 @@ export default function CameraScreen({ route, navigation }) {
     })();
   }, []);
   
+    const takePhotoLocal = async () => {
+      console.log("Starting takePhotoLocal function");
+      let result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: true,
+        aspect: [3, 4],
+        quality: 0.5,
+        base64: true,
+      });
+
+      console.log("ImagePicker result:", result);
+
+        if (!result.cancelled && result.assets[0].base64) {
+          const imageData = result.assets[0].base64;
+
+          // Send the image data to the server
+          let formData = new FormData();
+          formData.append('image', imageData);
+
+          console.log("Sending POST request to server");
+
+          return axios({
+            method: "POST",
+            url: "http://nashandrew.pythonanywhere.com/predict",
+            data: formData,
+            headers: {
+              "Content-Type": "multipart/form-data"
+            }
+          })
+          .then(function(response) {
+            console.log("API call was successful. Response data:", response.data);
+            return response.data;
+          })
+          .catch(function(error) {
+            console.error("Error occurred during the API call:", error.message);
+            throw error;
+          });
+        } else {
+          console.log("Image selection was cancelled or there was an error");
+        }
+    };
 
   const takePhoto = async () => {
     let result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
-      aspect: [4, 3],
+      aspect: [3, 4],
       quality: 0.5,
       base64: true,
     });
 
     if (!result.cancelled && result.assets[0].uri) {
+      const imageUri = result.assets[0].uri;
+      setImage(imageUri);
       const image = `data:image/jpg;base64,${result.assets[0].base64}`;
-  
+
+      // Array to store the predictions from the three APIs
+      const predictions = [];
+
+      // First API call
       axios({
         method: "POST",
         url: "https://detect.roboflow.com/waste-classification-uwqfy/1",
@@ -50,13 +98,56 @@ export default function CameraScreen({ route, navigation }) {
       })
       .then(function(response) {
         console.log(response.data);
-        setApiResult(response.data);
-      
-        // Get the predicted class from the response
-        const predictedClass = response.data.predictions[0].class;
-      
-        // Compare the predicted class to the name variable
-        if (predictedClass === name) {
+        if (response.data.predictions.length > 0) {
+          predictions.push(response.data.predictions[0].class.toLowerCase());
+        }
+      })
+      .catch(function(error) {
+        console.error(error.message);
+      });
+
+      // Second API call
+      axios({
+        method: "POST",
+        url: "https://classify.roboflow.com/garbage-clasification/2",
+        params: {
+          api_key: "3QdxSGtdKAUtfOwAjkC4"
+        },
+        data: image,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      })
+      .then(function(response) {
+        console.log(response.data);
+        if (response.data.predictions.length > 0) {
+          predictions.push(response.data.predictions[0].class.toLowerCase());
+        }
+      })
+      .catch(function(error) {
+        console.error(error.message);
+      });
+
+      // Third API call
+      axios({
+        method: "POST",
+        url: "https://classify.roboflow.com/greenai-v2-v4sv0/2",
+        params: {
+          api_key: "3QdxSGtdKAUtfOwAjkC4"
+        },
+        data: image,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      })
+      .then(function(response) {
+        console.log(response.data);
+        if (response.data.predictions.length > 0) {
+          predictions.push(response.data.predictions[0].class.toLowerCase());
+        }
+
+        // After all API calls have finished, compare the predictions to name
+        if (predictions.includes(name.toLowerCase())) {
           setIsCorrect(true);
         } else {
           setIsCorrect(false);
@@ -75,14 +166,20 @@ export default function CameraScreen({ route, navigation }) {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
-      aspect: [4, 3],
+      aspect: [3, 4],
       quality: 0.5,
       base64: true,
     });
 
     if (!result.cancelled && result.assets[0].uri) {
+      const imageUri = result.assets[0].uri;
+      setImage(imageUri);
       const image = `data:image/jpg;base64,${result.assets[0].base64}`;
 
+      // Array to store the predictions from the three APIs
+      const predictions = [];
+
+      // First API call
       axios({
         method: "POST",
         url: "https://detect.roboflow.com/waste-classification-uwqfy/1",
@@ -96,13 +193,56 @@ export default function CameraScreen({ route, navigation }) {
       })
       .then(function(response) {
         console.log(response.data);
-        setApiResult(response.data);
-      
-        // Get the predicted class from the response
-        const predictedClass = response.data.predictions[0].class;
-      
-        // Compare the predicted class to the name variable
-        if (predictedClass === name) {
+        if (response.data.predictions.length > 0) {
+          predictions.push(response.data.predictions[0].class.toLowerCase());
+        }
+      })
+      .catch(function(error) {
+        console.error(error.message);
+      });
+
+      // Second API call
+      axios({
+        method: "POST",
+        url: "https://classify.roboflow.com/garbage-clasification/2",
+        params: {
+          api_key: "3QdxSGtdKAUtfOwAjkC4"
+        },
+        data: image,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      })
+      .then(function(response) {
+        console.log(response.data);
+        if (response.data.predictions.length > 0) {
+          predictions.push(response.data.predictions[0].class.toLowerCase());
+        }
+      })
+      .catch(function(error) {
+        console.error(error.message);
+      });
+
+      // Third API call
+      axios({
+        method: "POST",
+        url: "https://classify.roboflow.com/greenai-v2-v4sv0/2",
+        params: {
+          api_key: "3QdxSGtdKAUtfOwAjkC4"
+        },
+        data: image,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      })
+      .then(function(response) {
+        console.log(response.data);
+        if (response.data.predictions.length > 0) {
+          predictions.push(response.data.predictions[0].class.toLowerCase());
+        }
+
+        // After all API calls have finished, compare the predictions to name
+        if (predictions.includes(name.toLowerCase())) {
           setIsCorrect(true);
         } else {
           setIsCorrect(false);
@@ -115,7 +255,6 @@ export default function CameraScreen({ route, navigation }) {
       console.error('Image selection was cancelled or there was an error');
     }
   };
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -136,10 +275,14 @@ export default function CameraScreen({ route, navigation }) {
 
       <Text style={styles.labelText}>Challenge #{level ? level.toString() : 'N/A'}</Text>
 
-      <TouchableOpacity style={styles.playButton} onPress={() => null }>
-        <Text style={styles.playButtonText1}>Take a photo of:</Text>
-        <Text style={styles.playButtonText2}>{name}</Text>
-      </TouchableOpacity>
+      {image ? (
+        <Image source={{ uri: image }} style={styles.playButton} />
+      ) : (
+        <TouchableOpacity style={styles.playButton} onPress={() => null }>
+          <Text style={styles.playButtonText1}>Take a photo of:</Text>
+          <Text style={styles.playButtonText2}>{name}</Text>
+        </TouchableOpacity>
+      )}
 
       {isCorrect !== null && (
         <Text style={[styles.judgeText, { color: isCorrect ? 'orange' : 'red' }]}>
@@ -206,7 +349,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     overflow: 'hidden',
     padding: 10,
-    elevation: 10,
     alignItems: 'flex-start', 
     marginTop: height * 0.005,
     shadowColor: "#000",
