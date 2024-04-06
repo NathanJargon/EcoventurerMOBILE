@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, Button, Image, View, Platform, Dimensions, TouchableOpacity } from 'react-native';
+import { Animated, Modal, StyleSheet, Text, Button, Image, View, Platform, Dimensions, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { firebase } from './FirebaseConfig';
@@ -13,7 +13,28 @@ export default function CameraScreen({ route, navigation }) {
   const [isCorrect, setIsCorrect] = useState(null);
   const [image, setImage] = useState(null);
   const [apiResult, setApiResult] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [fadeAnim] = useState(new Animated.Value(0));
 
+  const fadeInOut = () => {
+    Animated.sequence([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 2000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 2000,
+        useNativeDriver: true,
+      }),
+    ]).start(() => fadeInOut());
+  };
+
+  useEffect(() => {
+    fadeInOut();
+  }, []);
+  
   useEffect(() => {
     (async () => {
       if (Platform.OS !== 'web') {
@@ -25,47 +46,89 @@ export default function CameraScreen({ route, navigation }) {
     })();
   }, []);
   
-    const takePhotoLocal = async () => {
-      console.log("Starting takePhotoLocal function");
-      let result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.All,
-        allowsEditing: true,
-        aspect: [3, 4],
-        quality: 0.5,
-        base64: true,
-      });
+  const takePhotoLocal = async () => {
+    console.log("Starting takePhotoLocal function");
+    let result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 0.5,
+      base64: true,
+    });
 
-      console.log("ImagePicker result:", result);
+    console.log("ImagePicker result:", result);
 
-        if (!result.cancelled && result.assets[0].base64) {
-          const imageData = result.assets[0].base64;
+    if (!result.cancelled) {
+      setIsAnalyzing(true);
+      const { uri } = result.assets[0];
+      const response = await fetch(uri);
+      const blob = await response.blob();
 
-          // Send the image data to the server
-          let formData = new FormData();
-          formData.append('image', imageData);
+      const imageName = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + ".jpg";
 
-          console.log("Sending POST request to server");
+      const ref = firebase.storage().ref().child(imageName);
+      await ref.put(blob);
 
-          return axios({
-            method: "POST",
-            url: "http://nashandrew.pythonanywhere.com/predict",
-            data: formData,
-            headers: {
-              "Content-Type": "multipart/form-data"
-            }
-          })
-          .then(function(response) {
-            console.log("API call was successful. Response data:", response.data);
-            return response.data;
-          })
-          .catch(function(error) {
-            console.error("Error occurred during the API call:", error.message);
-            throw error;
-          });
-        } else {
-          console.log("Image selection was cancelled or there was an error");
+      const imageUrl = await ref.getDownloadURL();
+
+      let formData = new FormData();
+      formData.append('image_url', imageUrl);
+      formData.append('candidate_labels', 'paper,plastic,glass,metal,cardboard,compost,landfill');
+
+      console.log("Sending POST request to server");
+
+      const image = `data:image/jpg;base64,${result.assets[0].base64}`;
+      setImage(image); 
+
+      const predictions = [];
+
+      return axios({
+        method: "POST",
+        url: "http://nashandrew.pythonanywhere.com/predict",
+        data: formData,
+        headers: {
+          "Content-Type": "multipart/form-data"
         }
-    };
+      })
+      .then(function(response) {
+        console.log("API call was successful. Response data:", response.data);
+      
+        ref.delete().then(function() {
+          console.log("Image deleted from Firebase Storage");
+        }).catch(function(error) {
+          console.error("Error deleting image from Firebase Storage:", error.message);
+        });
+      
+        if (response.data.labels) {
+          const labels = response.data.labels.slice(1, -1).split(', '); 
+          if (labels.length > 0) {
+            predictions.push(labels[0].toLowerCase());
+          }
+        
+          if (predictions.includes(name.toLowerCase())) {
+            setIsCorrect(true);
+          } else {
+            setIsCorrect(false);
+          }
+          setIsAnalyzing(false);
+        } else {
+          console.log('Error: labels is undefined');
+          setIsAnalyzing(false);
+        }
+      
+        return response.data;
+      })
+      .catch(function(error) {
+        console.error("Error occurred during the API call:", error.message);
+        setIsAnalyzing(false);
+        throw error;
+      });
+      
+    } else {
+      console.log("Image selection was cancelled or there was an error");
+      setIsAnalyzing(false);
+    }
+  };
 
   const takePhoto = async () => {
     let result = await ImagePicker.launchCameraAsync({
@@ -81,10 +144,8 @@ export default function CameraScreen({ route, navigation }) {
       setImage(imageUri);
       const image = `data:image/jpg;base64,${result.assets[0].base64}`;
 
-      // Array to store the predictions from the three APIs
       const predictions = [];
 
-      // First API call
       axios({
         method: "POST",
         url: "https://detect.roboflow.com/waste-classification-uwqfy/1",
@@ -106,7 +167,6 @@ export default function CameraScreen({ route, navigation }) {
         console.error(error.message);
       });
 
-      // Second API call
       axios({
         method: "POST",
         url: "https://classify.roboflow.com/garbage-clasification/2",
@@ -128,7 +188,6 @@ export default function CameraScreen({ route, navigation }) {
         console.error(error.message);
       });
 
-      // Third API call
       axios({
         method: "POST",
         url: "https://classify.roboflow.com/greenai-v2-v4sv0/2",
@@ -146,7 +205,6 @@ export default function CameraScreen({ route, navigation }) {
           predictions.push(response.data.predictions[0].class.toLowerCase());
         }
 
-        // After all API calls have finished, compare the predictions to name
         if (predictions.includes(name.toLowerCase())) {
           setIsCorrect(true);
         } else {
@@ -176,10 +234,8 @@ export default function CameraScreen({ route, navigation }) {
       setImage(imageUri);
       const image = `data:image/jpg;base64,${result.assets[0].base64}`;
 
-      // Array to store the predictions from the three APIs
       const predictions = [];
 
-      // First API call
       axios({
         method: "POST",
         url: "https://detect.roboflow.com/waste-classification-uwqfy/1",
@@ -201,7 +257,6 @@ export default function CameraScreen({ route, navigation }) {
         console.error(error.message);
       });
 
-      // Second API call
       axios({
         method: "POST",
         url: "https://classify.roboflow.com/garbage-clasification/2",
@@ -223,7 +278,6 @@ export default function CameraScreen({ route, navigation }) {
         console.error(error.message);
       });
 
-      // Third API call
       axios({
         method: "POST",
         url: "https://classify.roboflow.com/greenai-v2-v4sv0/2",
@@ -241,7 +295,6 @@ export default function CameraScreen({ route, navigation }) {
           predictions.push(response.data.predictions[0].class.toLowerCase());
         }
 
-        // After all API calls have finished, compare the predictions to name
         if (predictions.includes(name.toLowerCase())) {
           setIsCorrect(true);
         } else {
@@ -257,6 +310,23 @@ export default function CameraScreen({ route, navigation }) {
   };
   return (
     <View style={styles.container}>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isAnalyzing}
+        onRequestClose={() => {
+          setIsAnalyzing(false);
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Animated.Text style={{...styles.modalText, opacity: fadeAnim}}>
+              Analyzing data using OpenAI...
+            </Animated.Text>
+          </View>
+        </View>
+      </Modal>
+  
       <View style={styles.header}>
         <Image
           source={require('../assets/header.png')}
@@ -290,19 +360,61 @@ export default function CameraScreen({ route, navigation }) {
         </Text>
       )}
 
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: width * 0.1, }}>
-        <TouchableOpacity style={styles.button1} onPress={takePhoto}>
-          <Text style={styles.buttonText}>Take a Photo</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button2} onPress={pickImage}>
-          <Text style={styles.buttonText}>Upload a Photo</Text>
-        </TouchableOpacity>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: width * 0.01, }}>
+          {isCorrect ? (
+            <>
+            <TouchableOpacity style={[styles.button1, { height: '70%', } ]} onPress={takePhotoLocal}>
+              <Text style={styles.buttonText}></Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[ styles.button2, { height: '15%', } ]} onPress={ null }>
+              <Text style={styles.buttonText}>NEXT CHALLENGE</Text>
+            </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <TouchableOpacity style={styles.button1} onPress={takePhotoLocal}>
+                <Text style={styles.buttonText}>Take a Photo</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.button2} onPress={pickImage}>
+                <Text style={styles.buttonText}>Upload a Photo</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
       </View>
-    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 20,
+    paddingBottom: 0,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5
+  },
+    modalText: {
+      marginBottom: 15,
+      textAlign: "center",
+      color: "black", // White text
+      fontSize: 18, // Larger font size
+      fontWeight: "bold", // Bold text
+    },
   container: {
     flex: 1,
     backgroundColor: 'white',
