@@ -13,6 +13,9 @@ import SignUpScreen2 from './screens/SignUpScreen2';
 import SettingsScreen from './screens/SettingsScreen';
 import GameScreen from './screens/GameScreen';
 import LandPollution from './screens/Levels/LandPollution';
+import LeaderboardScreen from './screens/LeaderboardsScreen';
+import DiaryScreen from './screens/DiaryScreen';
+import EditScreen from './screens/EditScreen';
 
 const Stack = createStackNavigator();
 
@@ -68,6 +71,21 @@ export default function App() {
         <Stack.Screen 
           name="Land Pollution" 
           component={LandPollution} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Leaderboard"
+          component={LeaderboardScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Diary"
+          component={DiaryScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Edit"
+          component={EditScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

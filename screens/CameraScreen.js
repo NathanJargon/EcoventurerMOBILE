@@ -16,6 +16,29 @@ export default function CameraScreen({ route, navigation }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
 
+  useEffect(() => {
+    if (isCorrect !== null) {
+      const user = firebase.auth().currentUser;
+      if (user) {
+        const userRef = firebase.firestore().collection('users').doc(user.email);
+        userRef.get().then((doc) => {
+          if (doc.exists) {
+            const userData = doc.data();
+            if (userData.levelProgress[0] < 1) {
+              userRef.update({
+                levelProgress: [1, ...userData.levelProgress.slice(1)]
+              });
+            }
+          } else {
+            console.log("No such document!");
+          }
+        }).catch((error) => {
+          console.log("Error getting document:", error);
+        });
+      }
+    }
+  }, [isCorrect]);
+
   const fadeInOut = () => {
     Animated.sequence([
       Animated.timing(fadeAnim, {
@@ -59,6 +82,12 @@ export default function CameraScreen({ route, navigation }) {
     console.log("ImagePicker result:", result);
 
     if (!result.cancelled) {
+      if (!result.assets[0]) {
+        console.log("No image was captured");
+        setIsAnalyzing(false);
+        return;
+      }
+    
       setIsAnalyzing(true);
       const { uri } = result.assets[0];
       const response = await fetch(uri);
@@ -73,7 +102,7 @@ export default function CameraScreen({ route, navigation }) {
 
       let formData = new FormData();
       formData.append('image_url', imageUrl);
-      formData.append('candidate_labels', 'paper,plastic,glass,metal,cardboard,compost,landfill');
+      formData.append('candidate_labels', 'paper,plastic,glass,metal,cardboard,compost,landfill,wood,textile,rubber,ceramic,leather,concrete,food,electronics');
 
       console.log("Sending POST request to server");
 
@@ -100,11 +129,15 @@ export default function CameraScreen({ route, navigation }) {
         });
       
         if (response.data.labels) {
-          const labels = response.data.labels.slice(1, -1).split(', '); 
+          const labels = response.data.labels.replace(/[()]/g, '').split(', ').map(label => label.replace(/['"]/g, ''));
+          console.log('Labels:', labels); 
+
           if (labels.length > 0) {
             predictions.push(labels[0].toLowerCase());
           }
-        
+
+          console.log('Predictions:', predictions); 
+
           if (predictions.includes(name.toLowerCase())) {
             setIsCorrect(true);
           } else {
@@ -115,7 +148,7 @@ export default function CameraScreen({ route, navigation }) {
           console.log('Error: labels is undefined');
           setIsAnalyzing(false);
         }
-      
+
         return response.data;
       })
       .catch(function(error) {
@@ -129,6 +162,102 @@ export default function CameraScreen({ route, navigation }) {
       setIsAnalyzing(false);
     }
   };
+
+
+  const pickImageLocal = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [3, 4],
+      quality: 0.5,
+      base64: true,
+    });
+
+    console.log("ImagePicker result:", result);
+
+    if (!result.cancelled) {
+      if (!result.assets[0]) {
+        console.log("No image was selected");
+        setIsAnalyzing(false);
+        return;
+      }
+
+      setIsAnalyzing(true);
+      const { uri } = result.assets[0];
+      const response = await fetch(uri);
+      const blob = await response.blob();
+
+      const imageName = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + ".jpg";
+
+      const ref = firebase.storage().ref().child(imageName);
+      await ref.put(blob);
+
+      const imageUrl = await ref.getDownloadURL();
+
+      let formData = new FormData();
+      formData.append('image_url', imageUrl);
+      formData.append('candidate_labels', 'paper,plastic,glass,metal,cardboard,compost,landfill,wood,textile,rubber,ceramic,leather,concrete,food,electronics');
+
+      console.log("Sending POST request to server");
+
+      const image = `data:image/jpg;base64,${result.assets[0].base64}`;
+      setImage(image); 
+
+      const predictions = [];
+
+      return axios({
+        method: "POST",
+        url: "http://nashandrew.pythonanywhere.com/predict",
+        data: formData,
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      })
+      .then(function(response) {
+        console.log("API call was successful. Response data:", response.data);
+      
+        ref.delete().then(function() {
+          console.log("Image deleted from Firebase Storage");
+        }).catch(function(error) {
+          console.error("Error deleting image from Firebase Storage:", error.message);
+        });
+      
+        if (response.data.labels) {
+          const labels = response.data.labels.replace(/[()]/g, '').split(', ').map(label => label.replace(/['"]/g, ''));
+          console.log('Labels:', labels); 
+
+          if (labels.length > 0) {
+            predictions.push(labels[0].toLowerCase());
+          }
+
+          console.log('Predictions:', predictions); 
+
+          if (predictions.includes(name.toLowerCase())) {
+            setIsCorrect(true);
+          } else {
+            setIsCorrect(false);
+          }
+          setIsAnalyzing(false);
+        } else {
+          console.log('Error: labels is undefined');
+          setIsAnalyzing(false);
+        }
+
+        return response.data;
+      })
+      .catch(function(error) {
+        console.error("Error occurred during the API call:", error.message);
+        setIsAnalyzing(false);
+        throw error;
+      });
+      
+    } else {
+      console.log("Image selection was cancelled or there was an error");
+      setIsAnalyzing(false);
+    }
+  };
+
+
 
   const takePhoto = async () => {
     let result = await ImagePicker.launchCameraAsync({
@@ -308,6 +437,7 @@ export default function CameraScreen({ route, navigation }) {
       console.error('Image selection was cancelled or there was an error');
     }
   };
+
   return (
     <View style={styles.container}>
       <Modal
@@ -321,7 +451,7 @@ export default function CameraScreen({ route, navigation }) {
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <Animated.Text style={{...styles.modalText, opacity: fadeAnim}}>
-              Analyzing data using OpenAI...
+              Analyzing image using OpenAI...
             </Animated.Text>
           </View>
         </View>
@@ -333,7 +463,7 @@ export default function CameraScreen({ route, navigation }) {
           style={styles.image}
         />
         <View style={styles.backButtonContainer}>
-          <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+          <TouchableOpacity onPress={() => navigation.navigate('Land Pollution')}>
             <Image
               source={require('../assets/round-back.png')}
               style={styles.backButtonImage}
@@ -360,25 +490,31 @@ export default function CameraScreen({ route, navigation }) {
         </Text>
       )}
 
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: width * 0.01, }}>
-          {isCorrect ? (
-            <>
-            <TouchableOpacity style={[styles.button1, { height: '70%', } ]} onPress={takePhotoLocal}>
-              <Text style={styles.buttonText}></Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[ styles.button2, { height: '15%', } ]} onPress={ null }>
-              <Text style={styles.buttonText}>NEXT CHALLENGE</Text>
-            </TouchableOpacity>
-            </>
-          ) : (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: width * 0.01, }}>
+          {isCorrect === null ? (
             <>
               <TouchableOpacity style={styles.button1} onPress={takePhotoLocal}>
                 <Text style={styles.buttonText}>Take a Photo</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.button2} onPress={pickImage}>
+              <TouchableOpacity style={styles.button2} onPress={pickImageLocal}>
                 <Text style={styles.buttonText}>Upload a Photo</Text>
               </TouchableOpacity>
             </>
+          ) : isCorrect ? (
+            <>
+              <TouchableOpacity style={[styles.button1, { height: '70%', } ]} onPress= { null }>
+                <Text style={styles.buttonText}></Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[ styles.button2, { height: '15%', } ]} onPress={ null }>
+                <Text style={styles.buttonText}>NEXT CHALLENGE</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity style={[ styles.button1, { marginTop: height * 0.21, height: '25%'} ]} onPress={() => {
+              setIsCorrect(null); 
+            }}>
+              <Text style={styles.buttonText}>Retake another picture</Text>
+            </TouchableOpacity>
           )}
         </View>
       </View>
@@ -394,10 +530,9 @@ const styles = StyleSheet.create({
   },
   modalView: {
     margin: 20,
-    backgroundColor: "white",
+    backgroundColor: "#4fb2aa",
     borderRadius: 20,
     padding: 20,
-    paddingBottom: 0,
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {
@@ -409,11 +544,10 @@ const styles = StyleSheet.create({
     elevation: 5
   },
     modalText: {
-      marginBottom: 15,
       textAlign: "center",
-      color: "black", // White text
-      fontSize: 18, // Larger font size
-      fontWeight: "bold", // Bold text
+      color: "white", 
+      fontSize: 18, 
+      fontWeight: "bold", 
     },
   container: {
     flex: 1,

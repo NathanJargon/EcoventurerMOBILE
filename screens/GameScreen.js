@@ -16,7 +16,7 @@ export default function GameScreen({ navigation }) {
     const fetchUserData = async () => {
       const user = firebase.auth().currentUser;
       if (user) {
-        const doc = await firebase.firestore().collection('users').doc(user.uid).get();
+        const doc = await firebase.firestore().collection('users').doc(user.email).get();
         if (doc.exists) {
           const userData = doc.data();
           setLevelUnlocked(userData.levelUnlocked);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, Alert, ImageBackground, View, TouchableOpacity, Text, StyleSheet, Dimensions, Image, BackHandler } from 'react-native';
+import { Modal, ScrollView, Alert, ImageBackground, View, TouchableOpacity, Text, StyleSheet, Dimensions, Image, BackHandler } from 'react-native';
 import { TextInput } from 'react-native-paper';
 import { firebase } from '../FirebaseConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,8 +11,9 @@ export default function LandPollution({ navigation }) {
   const [levelProgress, setLevelProgress] = useState([]);
   const [loading, setLoading] = useState(true); 
   const levelNames = ['Land Pollution', 'Recycling Wastes', 'Pollution'];
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
-  useEffect(() => {
+    useEffect(() => {
     const fetchUserData = async () => {
       const user = firebase.auth().currentUser;
       if (user) {
@@ -21,10 +22,6 @@ export default function LandPollution({ navigation }) {
           const userData = doc.data();
           setLevelUnlocked(userData.levelUnlocked);
           setLevelProgress(userData.levelProgress || []);
-
-          if (userData.levelProgress && userData.levelProgress[0] === 10) {
-            navigation.navigate('Home'); 
-          }
         } else {
           console.log('No such document!');
         }
@@ -34,14 +31,22 @@ export default function LandPollution({ navigation }) {
       setLoading(false); 
     };
     fetchUserData();
-  }, []); 
+  }, []);
+
+  useEffect(() => {
+    console.log(levelProgress); 
+    if (levelProgress[0] >= 10) {
+      console.log('Setting isModalVisible to true'); 
+      setIsModalVisible(true);
+    }
+  }, [levelProgress]);
 
   const saveProgress = async (level, progress) => {
     const user = firebase.auth().currentUser;
     const newLevelProgress = [...levelProgress];
     newLevelProgress[level] = progress;
     setLevelProgress(newLevelProgress);
-    await firebase.firestore().collection('users').doc(user.uid).update({
+    await firebase.firestore().collection('users').doc(user.email).update({
       levelProgress: newLevelProgress,
     });
   };
@@ -119,7 +124,23 @@ export default function LandPollution({ navigation }) {
           key={index}
           style={playButtonStyle}
           onPress={() => {
-            if (index <= levelUnlocked) {
+            if (levelProgress[0] >= 1 && index === 0) {
+              Alert.alert(
+                'Rechallenge?',
+                'You have already completed this challenge. Would you try again?',
+                [
+                  {
+                    text: 'No',
+                    onPress: () => null,
+                    style: 'cancel',
+                  },
+                  {
+                    text: 'Yes',
+                    onPress: () => navigation.navigate('Camera', { object: { challengeNumber: index + 1, trash: trashes[index] } }),
+                  },
+                ]
+              );
+            } else if (index <= levelUnlocked) {
               navigation.navigate('Camera', { object: { challengeNumber: index + 1, trash: trashes[index] } });
             } else {
               Alert.alert('Locked', `Finish Challenge #${index + 1} to unlock this challenge.`);
@@ -129,16 +150,117 @@ export default function LandPollution({ navigation }) {
           <View style={styles.textContainer}>
             <Text style={styles.playButtonText}>{`Challenge #${index + 1}`}</Text>
           </View>
+          {levelProgress[0] >= 1 && index === 0 && (
+            <Image
+              source={require('../../assets/icons/completed.png')} 
+              style={styles.completedIcon} 
+            />
+          )}
         </TouchableOpacity>
       );
     })}
     </ScrollView>
+      <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isModalVisible}
+          onRequestClose={() => {
+            setIsModalVisible(false);
+          }}
+        >
+          <View style={styles.centeredView}>
+            <View style={styles.modalView}>
+              <Text style={[styles.modalText, { fontSize: width * 0.1, marginBottom: 10, fontWeight: "bold", } ]}>Diary Complete!</Text>
+              <Text style={[ styles.modalText, { fontSize: width * 0.075, marginBottom: 30, } ]}> Proceed to Quiz</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <TouchableOpacity
+                  style={styles.buttonYes}
+                  onPress={() => {
+                    setIsModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.buttonTextYes}>YES</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.buttonNo}
+                  onPress={() => {
+                    setIsModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.buttonTextNo}>NO</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+        </Modal>
+
     </View>
   );
 };
 
 
 const styles = StyleSheet.create({
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22,
+  },
+  buttonYes: {
+    backgroundColor: '#4fb2aa',
+    borderColor: 'white',
+    borderWidth: 5,
+    borderRadius: 20,
+    padding: 15, 
+    width: '45%', 
+    alignItems: 'center',
+    justifyContent: 'center', 
+    margin: 10,
+  },
+  buttonNo: {
+    backgroundColor: 'white',
+    borderColor: '#4fb2aa',
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 15, 
+    width: '45%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: 10
+  },
+  buttonTextYes: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: width * 0.05,
+    textAlign: 'center',
+  },
+  buttonTextNo: {
+    color: '#4fb2aa',
+    fontWeight: 'bold',
+    fontSize: width * 0.05,
+    textAlign: 'center',
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "#4fb2aa",
+    borderRadius: 20,
+    padding: 20,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5
+  },
+    modalText: {
+      textAlign: "center",
+      color: "white",
+      fontSize: 18,
+    },
   container: {
     flex: 1,
     backgroundColor: 'white',
@@ -146,6 +268,11 @@ const styles = StyleSheet.create({
   backButtonImage: {
     width: 50,
     height: 50,
+  },
+  completedIcon: {
+    width: 30,
+    height: 30,
+    marginRight: 10,
   },
   header: {
     height: '23%',

@@ -20,10 +20,18 @@ export default function LoginScreen({ navigation }) {
         setEmail(savedEmail);
         setPassword(savedPassword);
         setRemember(true);
+        firebase
+          .auth()
+          .signInWithEmailAndPassword(savedEmail, savedPassword)
+          .then((response) => {
+            navigation.navigate('Home');
+          })
+          .catch((error) => {
+            // Handle login error here
+          });
       }
     };
     checkLogin();
-
 
     const authListener = firebase.auth().onAuthStateChanged((user) => {
       if (user) {
