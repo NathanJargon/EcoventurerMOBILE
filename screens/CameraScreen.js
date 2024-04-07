@@ -3,6 +3,7 @@ import { Animated, Modal, StyleSheet, Text, Button, Image, View, Platform, Dimen
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { firebase } from './FirebaseConfig';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -15,59 +16,27 @@ export default function CameraScreen({ route, navigation }) {
   const [apiResult, setApiResult] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
+  const [userDiary, setUserDiary] = useState([]);
+  const [levelProgress, setLevelProgress] = useState([]);
+  const [currentChallenge, setCurrentChallenge] = useState(0);
+  const [currentName, setCurrentName] = useState(name);
+  const [currentLevel, setCurrentLevel] = useState(level);
+  const [hasUpdatedChallenge, setHasUpdatedChallenge] = useState(false);
 
   useEffect(() => {
-    if (isCorrect !== null) {
-      const user = firebase.auth().currentUser;
-      if (user) {
-        const userRef = firebase.firestore().collection('users').doc(user.email);
-        userRef.get().then((doc) => {
-          if (doc.exists) {
-            const userData = doc.data();
-            if (userData.levelProgress[0] < 1) {
-              userRef.update({
-                levelProgress: [1, ...userData.levelProgress.slice(1)]
-              });
-            }
-          } else {
-            console.log("No such document!");
-          }
-        }).catch((error) => {
-          console.log("Error getting document:", error);
-        });
+    // Fetch the current challenge from local storage when the component is mounted
+    AsyncStorage.getItem('currentChallenge').then(value => {
+      if (value !== null) {
+        setCurrentChallenge(Number(value));
       }
-    }
-  }, [isCorrect]);
-
-  const fadeInOut = () => {
-    Animated.sequence([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 2000,
-        useNativeDriver: true,
-      }),
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 2000,
-        useNativeDriver: true,
-      }),
-    ]).start(() => fadeInOut());
-  };
-
-  useEffect(() => {
-    fadeInOut();
+    });
   }, []);
   
   useEffect(() => {
-    (async () => {
-      if (Platform.OS !== 'web') {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-          alert('Sorry, we need camera roll permissions to make this work!');
-        }
-      }
-    })();
-  }, []);
+    // Store the current challenge in local storage whenever it changes
+    AsyncStorage.setItem('currentChallenge', currentChallenge.toString());
+  }, [currentChallenge]);
+
   
   const takePhotoLocal = async () => {
     console.log("Starting takePhotoLocal function");
@@ -75,7 +44,7 @@ export default function CameraScreen({ route, navigation }) {
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
       aspect: [3, 4],
-      quality: 0.5,
+      quality: 0.3,
       base64: true,
     });
 
@@ -122,11 +91,7 @@ export default function CameraScreen({ route, navigation }) {
       .then(function(response) {
         console.log("API call was successful. Response data:", response.data);
       
-        ref.delete().then(function() {
-          console.log("Image deleted from Firebase Storage");
-        }).catch(function(error) {
-          console.error("Error deleting image from Firebase Storage:", error.message);
-        });
+        setUserDiary([...userDiary, imageUrl]);
       
         if (response.data.labels) {
           const labels = response.data.labels.replace(/[()]/g, '').split(', ').map(label => label.replace(/['"]/g, ''));
@@ -138,10 +103,22 @@ export default function CameraScreen({ route, navigation }) {
 
           console.log('Predictions:', predictions); 
 
-          if (predictions.includes(name.toLowerCase())) {
+          if (predictions.map(p => p.toLowerCase()).includes(currentName.toLowerCase())) {
             setIsCorrect(true);
           } else {
             setIsCorrect(false);
+            ref.delete().then(() => {
+              console.log("Image deleted from Firebase Storage");
+          
+              ref.getDownloadURL().then(() => {
+                console.log("Error: Image still exists");
+              }).catch(() => {
+                console.log("Image successfully deleted");
+              });
+          
+            }).catch((error) => {
+              console.error("Error deleting image from Firebase Storage:", error);
+            });
           }
           setIsAnalyzing(false);
         } else {
@@ -169,7 +146,7 @@ export default function CameraScreen({ route, navigation }) {
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
       aspect: [3, 4],
-      quality: 0.5,
+      quality: 0.3,
       base64: true,
     });
 
@@ -216,11 +193,7 @@ export default function CameraScreen({ route, navigation }) {
       .then(function(response) {
         console.log("API call was successful. Response data:", response.data);
       
-        ref.delete().then(function() {
-          console.log("Image deleted from Firebase Storage");
-        }).catch(function(error) {
-          console.error("Error deleting image from Firebase Storage:", error.message);
-        });
+        setUserDiary([...userDiary, imageUrl]);
       
         if (response.data.labels) {
           const labels = response.data.labels.replace(/[()]/g, '').split(', ').map(label => label.replace(/['"]/g, ''));
@@ -232,10 +205,23 @@ export default function CameraScreen({ route, navigation }) {
 
           console.log('Predictions:', predictions); 
 
-          if (predictions.includes(name.toLowerCase())) {
+          if (predictions.map(p => p.toLowerCase()).includes(currentName.toLowerCase())) {
             setIsCorrect(true);
           } else {
             setIsCorrect(false);
+            ref.delete().then(() => {
+              console.log("Image deleted from Firebase Storage");
+          
+              // Check if the image has been deleted
+              ref.getDownloadURL().then(() => {
+                console.log("Error: Image still exists");
+              }).catch(() => {
+                console.log("Image successfully deleted");
+              });
+          
+            }).catch((error) => {
+              console.error("Error deleting image from Firebase Storage:", error);
+            });
           }
           setIsAnalyzing(false);
         } else {
@@ -257,186 +243,98 @@ export default function CameraScreen({ route, navigation }) {
     }
   };
 
+  useEffect(() => {
+    if (isCorrect === true) {
+      const user = firebase.auth().currentUser;
+      if (user) {
+        const userRef = firebase.firestore().collection('users').doc(user.email);
+        userRef.get().then((doc) => {
+          if (doc.exists) {
+            const userData = doc.data();
+            const currentChallenge = userData.currentChallenge;
+            let levelProgress = Array.isArray(userData.levelProgress) ? userData.levelProgress : [0, 0, 0];
 
-
-  const takePhoto = async () => {
-    let result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [3, 4],
-      quality: 0.5,
-      base64: true,
-    });
-
-    if (!result.cancelled && result.assets[0].uri) {
-      const imageUri = result.assets[0].uri;
-      setImage(imageUri);
-      const image = `data:image/jpg;base64,${result.assets[0].base64}`;
-
-      const predictions = [];
-
-      axios({
-        method: "POST",
-        url: "https://detect.roboflow.com/waste-classification-uwqfy/1",
-        params: {
-          api_key: "3QdxSGtdKAUtfOwAjkC4"
-        },
-        data: image,
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        }
-      })
-      .then(function(response) {
-        console.log(response.data);
-        if (response.data.predictions.length > 0) {
-          predictions.push(response.data.predictions[0].class.toLowerCase());
-        }
-      })
-      .catch(function(error) {
-        console.error(error.message);
-      });
-
-      axios({
-        method: "POST",
-        url: "https://classify.roboflow.com/garbage-clasification/2",
-        params: {
-          api_key: "3QdxSGtdKAUtfOwAjkC4"
-        },
-        data: image,
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        }
-      })
-      .then(function(response) {
-        console.log(response.data);
-        if (response.data.predictions.length > 0) {
-          predictions.push(response.data.predictions[0].class.toLowerCase());
-        }
-      })
-      .catch(function(error) {
-        console.error(error.message);
-      });
-
-      axios({
-        method: "POST",
-        url: "https://classify.roboflow.com/greenai-v2-v4sv0/2",
-        params: {
-          api_key: "3QdxSGtdKAUtfOwAjkC4"
-        },
-        data: image,
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        }
-      })
-      .then(function(response) {
-        console.log(response.data);
-        if (response.data.predictions.length > 0) {
-          predictions.push(response.data.predictions[0].class.toLowerCase());
-        }
-
-        if (predictions.includes(name.toLowerCase())) {
-          setIsCorrect(true);
-        } else {
-          setIsCorrect(false);
-        }
-      })
-      .catch(function(error) {
-        console.error(error.message);
-      });
-    } else {
-      console.error('Image selection was cancelled or there was an error');
+            if (challengeNumber === currentChallenge) { 
+              levelProgress[0]++;
+              setLevelProgress([...levelProgress]);
+              let newChallenge = currentChallenge + 1;
+              setCurrentChallenge(newChallenge);
+              let updateObject = {
+                levelProgress: levelProgress,
+                currentChallenge: newChallenge
+              };
+              
+              userDiary.forEach(entry => {
+                updateObject['diary'] = firebase.firestore.FieldValue.arrayUnion(entry);
+              });
+              
+              userRef.update(updateObject);
+            }
+            setHasUpdatedChallenge(true);
+          } else {
+            console.log("No such document!");
+          }
+        }).catch((error) => {
+          console.log("Error getting document:", error);
+        });
+      }
     }
+  }, [isCorrect, userDiary, currentChallenge]);
+
+  useEffect(() => {
+    if (isCorrect === false) {
+      setHasUpdatedChallenge(false);
+    }
+  }, [isCorrect]);
+
+  const fadeInOut = () => {
+    Animated.sequence([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 2000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 2000,
+        useNativeDriver: true,
+      }),
+    ]).start(() => fadeInOut());
   };
 
-
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [3, 4],
-      quality: 0.5,
-      base64: true,
-    });
-
-    if (!result.cancelled && result.assets[0].uri) {
-      const imageUri = result.assets[0].uri;
-      setImage(imageUri);
-      const image = `data:image/jpg;base64,${result.assets[0].base64}`;
-
-      const predictions = [];
-
-      axios({
-        method: "POST",
-        url: "https://detect.roboflow.com/waste-classification-uwqfy/1",
-        params: {
-          api_key: "3QdxSGtdKAUtfOwAjkC4"
-        },
-        data: image,
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
+  useEffect(() => {
+    fadeInOut();
+  }, []);
+  
+  useEffect(() => {
+    (async () => {
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          alert('Sorry, we need camera roll permissions to make this work!');
         }
-      })
-      .then(function(response) {
-        console.log(response.data);
-        if (response.data.predictions.length > 0) {
-          predictions.push(response.data.predictions[0].class.toLowerCase());
-        }
-      })
-      .catch(function(error) {
-        console.error(error.message);
-      });
+      }
+    })();
+  }, []);
+  
 
-      axios({
-        method: "POST",
-        url: "https://classify.roboflow.com/garbage-clasification/2",
-        params: {
-          api_key: "3QdxSGtdKAUtfOwAjkC4"
-        },
-        data: image,
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        }
-      })
-      .then(function(response) {
-        console.log(response.data);
-        if (response.data.predictions.length > 0) {
-          predictions.push(response.data.predictions[0].class.toLowerCase());
-        }
-      })
-      .catch(function(error) {
-        console.error(error.message);
-      });
+  const trashes = [
+    { name: 'Plastic', level: 1 },
+    { name: 'Glass', level: 2 },
+    { name: 'Metal', level: 3 },
+    { name: 'Paper', level: 4 },
+    { name: 'Cardboard', level: 5 },
+    { name: 'Textile', level: 6 },
+    { name: 'Rubber', level: 7 },
+    { name: 'Leather', level: 8 },
+    { name: 'Wood', level: 9 },
+    { name: 'Electronics', level: 10 },
+  ];
 
-      axios({
-        method: "POST",
-        url: "https://classify.roboflow.com/greenai-v2-v4sv0/2",
-        params: {
-          api_key: "3QdxSGtdKAUtfOwAjkC4"
-        },
-        data: image,
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        }
-      })
-      .then(function(response) {
-        console.log(response.data);
-        if (response.data.predictions.length > 0) {
-          predictions.push(response.data.predictions[0].class.toLowerCase());
-        }
-
-        if (predictions.includes(name.toLowerCase())) {
-          setIsCorrect(true);
-        } else {
-          setIsCorrect(false);
-        }
-      })
-      .catch(function(error) {
-        console.error(error.message);
-      });
-    } else {
-      console.error('Image selection was cancelled or there was an error');
-    }
-  };
+  useEffect(() => {
+    console.log(currentLevel);
+    console.log(currentName);
+  }, [currentLevel, currentName]);
 
   return (
     <View style={styles.container}>
@@ -473,14 +371,14 @@ export default function CameraScreen({ route, navigation }) {
         </View>
       </View>
 
-      <Text style={styles.labelText}>Challenge #{level ? level.toString() : 'N/A'}</Text>
+      <Text style={styles.labelText}>Challenge #{currentLevel ? currentLevel.toString() : 'N/A'}</Text>
 
       {image ? (
-        <Image source={{ uri: image }} style={styles.playButton} />
+        <Image key={image} source={image ? { uri: image } : null} style={styles.playButton} />
       ) : (
         <TouchableOpacity style={styles.playButton} onPress={() => null }>
           <Text style={styles.playButtonText1}>Take a photo of:</Text>
-          <Text style={styles.playButtonText2}>{name}</Text>
+          <Text style={styles.playButtonText2}>{currentName}</Text>
         </TouchableOpacity>
       )}
 
@@ -505,9 +403,25 @@ export default function CameraScreen({ route, navigation }) {
               <TouchableOpacity style={[styles.button1, { height: '70%', } ]} onPress= { null }>
                 <Text style={styles.buttonText}></Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[ styles.button2, { height: '15%', } ]} onPress={ null }>
-                <Text style={styles.buttonText}>NEXT CHALLENGE</Text>
-              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[ styles.button2, { height: '15%', } ]} 
+                onPress={async () => {
+                  let nextChallenge = currentChallenge - 1;
+
+                  if (nextChallenge < trashes.length) {
+                    setCurrentLevel(trashes[nextChallenge].level);
+                    setCurrentName(trashes[nextChallenge].name);
+                    
+                    setIsCorrect(null);
+                    setImage(null);
+                    setCurrentChallenge(nextChallenge);
+                  } else {
+                    navigation.navigate('Land Pollution');
+                  }
+                }}
+              >
+              <Text style={styles.buttonText}>NEXT CHALLENGE</Text>
+            </TouchableOpacity>
             </>
           ) : (
             <TouchableOpacity style={[ styles.button1, { marginTop: height * 0.21, height: '25%'} ]} onPress={() => {

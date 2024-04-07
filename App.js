@@ -16,6 +16,7 @@ import LandPollution from './screens/Levels/LandPollution';
 import LeaderboardScreen from './screens/LeaderboardsScreen';
 import DiaryScreen from './screens/DiaryScreen';
 import EditScreen from './screens/EditScreen';
+import QuizScreen from './screens/QuizScreen';
 
 const Stack = createStackNavigator();
 
@@ -86,6 +87,11 @@ export default function App() {
         <Stack.Screen
           name="Edit"
           component={EditScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Quiz"
+          component={QuizScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FlatList, View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
 import { firebase } from './FirebaseConfig';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -10,52 +11,61 @@ export default function DiaryScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(true);
   const [users, setUsers] = useState([]);
 
-  useEffect(() => {
-    const unsubscribeUsers = firebase.firestore().collection('users')
-      .onSnapshot((snapshot) => {
-        const newUsers = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+  useFocusEffect(
+    React.useCallback(() => {
+      const unsubscribeUsers = firebase.firestore().collection('users')
+        .onSnapshot((snapshot) => {
+          const newUsers = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data()
+          }));
 
-        setUsers(newUsers);
-      });
+          setUsers(newUsers);
+        });
 
-    return () => {
-      unsubscribeUsers();
-    };
-  }, []);
+      const unsubscribeBanners = firebase.firestore().collection('banner')
+        .onSnapshot((snapshot) => {
+          const newItems = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data()
+          }));
 
-  useEffect(() => {
-    const unsubscribeBanners = firebase.firestore().collection('banner')
-      .onSnapshot((snapshot) => {
-        const newItems = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+          setBanners(newItems);
+        });
 
-        setBanners(newItems);
-      });
+      const unsubscribeBorders = firebase.firestore().collection('border')
+        .onSnapshot((snapshot) => {
+          const newItems = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data()
+          }));
 
-    const unsubscribeBorders = firebase.firestore().collection('border')
-      .onSnapshot((snapshot) => {
-        const newItems = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+          setBorders(newItems);
+          setIsLoading(false);
+        });
 
-        setBorders(newItems);
-        setIsLoading(false);
-      });
-
-    return () => {
-      unsubscribeBanners();
-      unsubscribeBorders();
-    };
-  }, []);
+      return () => {
+        unsubscribeUsers();
+        unsubscribeBanners();
+        unsubscribeBorders();
+      };
+    }, [])
+  );
 
   const currentUserEmail = firebase.auth().currentUser.email;
   const otherUsers = users.filter(user => user.email !== currentUserEmail);
+  const usersWithDiary = users.filter(user => user.diary && user.diary.some(imageUri => imageUri !== ''));
+  const diaries = usersWithDiary.flatMap(user => 
+    user.diary
+      .filter(imageUri => imageUri.startsWith('https'))
+      .map((imageUri, index) => ({
+        imageUri,
+        index,
+        name: user.name,
+        id: user.id,
+        neededPoints: user.neededPoints
+      }))
+  );
 
   return (
     <View style={styles.container}>
@@ -83,16 +93,18 @@ export default function DiaryScreen({ navigation }) {
         <>
           <Text style={styles.sectionTitle}>Other people's diary</Text>
           <FlatList
-            data={otherUsers}
+            data={diaries}
             numColumns={2}
-            keyExtractor={item => item.id}
-            renderItem={({ item: user }) => (
-              <View style={styles.box}>
-                <Image source={user.imageUri ? { uri: user.imageUri } : require('../assets/bg1.jpg')} style={styles.boxImage} />
-                <TouchableOpacity style={styles.button} onPress={() => onPurchase(user.id, user.neededPoints)}>
-                  <Text style={styles.buttonText}>{user.name}</Text>
-                </TouchableOpacity>
-              </View>
+            keyExtractor={item => `${item.id}-${item.index}`}
+            renderItem={({ item }) => (
+              item.imageUri !== '' && (
+                <View style={styles.box}>
+                  <Image source={{ uri: item.imageUri }} style={styles.boxImage} />
+                  <TouchableOpacity style={styles.button} onPress={() => onPurchase(item.id, item.neededPoints)}>
+                    <Text style={styles.buttonText}>{item.name}</Text>
+                  </TouchableOpacity>
+                </View>
+              )
             )}
           />
         </>

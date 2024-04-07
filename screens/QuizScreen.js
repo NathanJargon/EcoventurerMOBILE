@@ -6,10 +6,7 @@ import { firebase } from './FirebaseConfig';
 
 const { width, height } = Dimensions.get('window');
 
-export default function QuizScreen({ route, navigation }) {
-  const { object } = route.params;
-  const { challengeNumber, trash } = object;
-  const { name, level } = trash;
+export default function QuizScreen({ navigation }) {
   const [isCorrect, setIsCorrect] = useState(null);
   const [image, setImage] = useState(null);
   const [apiResult, setApiResult] = useState(null);
@@ -71,18 +68,17 @@ export default function QuizScreen({ route, navigation }) {
               style={styles.backButtonImage}
             />
           </TouchableOpacity>
-          <Text style={styles.headerText}>Return</Text>
+          <Text style={styles.headerText}>Quiz Time</Text>
         </View>
       </View>
 
-      <Text style={styles.labelText}>Challenge #{level ? level.toString() : 'N/A'}</Text>
+      <Text style={styles.labelText}>Challenge #</Text>
 
       {image ? (
         <Image source={{ uri: image }} style={styles.playButton} />
       ) : (
         <TouchableOpacity style={styles.playButton} onPress={() => null }>
-          <Text style={styles.playButtonText1}>Take a photo of:</Text>
-          <Text style={styles.playButtonText2}>{name}</Text>
+          <Text style={styles.playButtonText2}>Question</Text>
         </TouchableOpacity>
       )}
 
@@ -95,10 +91,10 @@ export default function QuizScreen({ route, navigation }) {
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: width * 0.01, }}>
           {isCorrect === null ? (
             <>
-              <TouchableOpacity style={styles.button1} onPress={takePhotoLocal}>
+              <TouchableOpacity style={styles.button1} onPress={ null }>
                 <Text style={styles.buttonText}>Take a Photo</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.button2} onPress={pickImageLocal}>
+              <TouchableOpacity style={styles.button2} onPress={ null }>
                 <Text style={styles.buttonText}>Upload a Photo</Text>
               </TouchableOpacity>
             </>

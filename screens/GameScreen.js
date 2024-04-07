@@ -9,6 +9,7 @@ const { width, height } = Dimensions.get('window');
 export default function GameScreen({ navigation }) {
   const [levelUnlocked, setLevelUnlocked] = useState(0);
   const [levelProgress, setLevelProgress] = useState([]);
+  const [currentChallenge, setCurrentChallenge] = useState(0);
   const [loading, setLoading] = useState(true); 
   const levelNames = ['Land Pollution', 'Recycling Wastes', 'Pollution'];
 
@@ -21,6 +22,7 @@ export default function GameScreen({ navigation }) {
           const userData = doc.data();
           setLevelUnlocked(userData.levelUnlocked);
           setLevelProgress(userData.levelProgress || []);
+          setCurrentChallenge(userData.currentChallenge);
         } else {
           console.log('No such document!');
         }
@@ -121,7 +123,7 @@ export default function GameScreen({ navigation }) {
               <Text style={styles.playButtonText}>{levelNames[index]}</Text>
               {index <= levelUnlocked ? (
                 <Text style={styles.challengesText}>
-                  {`${levelProgress[index] || 0}/10 Challenges`}
+                  {`${levelProgress[0] || 0}/10 Challenges`}
                 </Text>
               ) : (
                 <View style={{ opacity: 1 }}>

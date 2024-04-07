@@ -3,6 +3,7 @@ import { Modal, ScrollView, Alert, ImageBackground, View, TouchableOpacity, Text
 import { TextInput } from 'react-native-paper';
 import { firebase } from '../FirebaseConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -12,32 +13,37 @@ export default function LandPollution({ navigation }) {
   const [loading, setLoading] = useState(true); 
   const levelNames = ['Land Pollution', 'Recycling Wastes', 'Pollution'];
   const [isModalVisible, setIsModalVisible] = useState(false);
-
-    useEffect(() => {
-    const fetchUserData = async () => {
-      const user = firebase.auth().currentUser;
-      if (user) {
-        const doc = await firebase.firestore().collection('users').doc(user.email).get();
-        if (doc.exists) {
-          const userData = doc.data();
-          setLevelUnlocked(userData.levelUnlocked);
-          setLevelProgress(userData.levelProgress || []);
+  const [currentChallenge, setCurrentChallenge] = useState(0);
+  
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchUserData = async () => {
+        const user = firebase.auth().currentUser;
+        if (user) {
+          const doc = await firebase.firestore().collection('users').doc(user.email).get();
+          if (doc.exists) {
+            const userData = doc.data();
+            setLevelUnlocked(userData.levelUnlocked);
+            setLevelProgress(userData.levelProgress || []);
+            setCurrentChallenge(userData.currentChallenge || 0);
+          } else {
+            console.log('No such document!');
+          }
         } else {
-          console.log('No such document!');
+          console.log('No user is signed in!');
         }
-      } else {
-        console.log('No user is signed in!');
-      }
-      setLoading(false); 
-    };
-    fetchUserData();
-  }, []);
+        setLoading(false); 
+      };
+      fetchUserData();
+    }, [])
+  );
 
   useEffect(() => {
     console.log(levelProgress); 
     if (levelProgress[0] >= 10) {
       console.log('Setting isModalVisible to true'); 
-      setIsModalVisible(true);
+      // Add a delay before setting the modal visibility
+      setTimeout(() => setIsModalVisible(true), 200);
     }
   }, [levelProgress]);
 
@@ -55,6 +61,13 @@ export default function LandPollution({ navigation }) {
     { name: 'Plastic', level: 1 },
     { name: 'Glass', level: 2 },
     { name: 'Metal', level: 3 },
+    { name: 'Paper', level: 4 },
+    { name: 'Cardboard', level: 5 },
+    { name: 'Textile', level: 6 },
+    { name: 'Rubber', level: 7 },
+    { name: 'Leather', level: 8 },
+    { name: 'Wood', level: 9 },
+    { name: 'Electronics', level: 10 },
   ];
 
   if (loading) {
@@ -73,6 +86,42 @@ export default function LandPollution({ navigation }) {
 
   return (
     <View style={styles.container}>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={isModalVisible}
+          onRequestClose={() => {
+            setIsModalVisible(false);
+          }}
+        >
+          <View style={styles.centeredView}>
+            <View style={styles.modalView}>
+              <Text style={[styles.modalText, { fontSize: width * 0.1, marginBottom: 10, fontWeight: "bold", } ]}>Diary Complete!</Text>
+              <Text style={[ styles.modalText, { fontSize: width * 0.075, marginBottom: 30, } ]}> Proceed to Quiz</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <TouchableOpacity
+                  style={styles.buttonYes}
+                  onPress={() => {
+                    navigation.navigate('Quiz');
+                    setIsModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.buttonTextYes}>YES</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.buttonNo}
+                  onPress={() => {
+                    setIsModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.buttonTextNo}>NO</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+
+        </Modal>
+
       <View style={styles.header}>
         <Image
           source={require('../../assets/header.png')}
@@ -91,7 +140,7 @@ export default function LandPollution({ navigation }) {
 
       <Text style={styles.labelText}>Accomplish the following challenges:</Text>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 25 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 200 }}>
       {[...Array(10)].map((_, index) => {
       const playButtonStyle = {
         margin: 15,
@@ -124,7 +173,7 @@ export default function LandPollution({ navigation }) {
           key={index}
           style={playButtonStyle}
           onPress={() => {
-            if (levelProgress[0] >= 1 && index === 0) {
+            if (index < levelProgress[0] ) {
               Alert.alert(
                 'Rechallenge?',
                 'You have already completed this challenge. Would you try again?',
@@ -140,17 +189,17 @@ export default function LandPollution({ navigation }) {
                   },
                 ]
               );
-            } else if (index <= levelUnlocked) {
+            } else if (index <= levelProgress[0]) {
               navigation.navigate('Camera', { object: { challengeNumber: index + 1, trash: trashes[index] } });
             } else {
-              Alert.alert('Locked', `Finish Challenge #${index + 1} to unlock this challenge.`);
+              Alert.alert('Locked', `Finish Challenge #${index} to unlock this challenge.`);
             }
           }}
         >
           <View style={styles.textContainer}>
             <Text style={styles.playButtonText}>{`Challenge #${index + 1}`}</Text>
           </View>
-          {levelProgress[0] >= 1 && index === 0 && (
+          {index < levelProgress[0] && (
             <Image
               source={require('../../assets/icons/completed.png')} 
               style={styles.completedIcon} 
@@ -160,41 +209,6 @@ export default function LandPollution({ navigation }) {
       );
     })}
     </ScrollView>
-      <Modal
-          animationType="slide"
-          transparent={true}
-          visible={isModalVisible}
-          onRequestClose={() => {
-            setIsModalVisible(false);
-          }}
-        >
-          <View style={styles.centeredView}>
-            <View style={styles.modalView}>
-              <Text style={[styles.modalText, { fontSize: width * 0.1, marginBottom: 10, fontWeight: "bold", } ]}>Diary Complete!</Text>
-              <Text style={[ styles.modalText, { fontSize: width * 0.075, marginBottom: 30, } ]}> Proceed to Quiz</Text>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <TouchableOpacity
-                  style={styles.buttonYes}
-                  onPress={() => {
-                    setIsModalVisible(false);
-                  }}
-                >
-                  <Text style={styles.buttonTextYes}>YES</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.buttonNo}
-                  onPress={() => {
-                    setIsModalVisible(false);
-                  }}
-                >
-                  <Text style={styles.buttonTextNo}>NO</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-
-        </Modal>
-
     </View>
   );
 };
