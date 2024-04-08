@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Animated, Modal, StyleSheet, Text, Button, Image, View, Platform, Dimensions, TouchableOpacity } from 'react-native';
+import { Alert, Animated, Modal, StyleSheet, Text, Button, Image, View, Platform, Dimensions, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { firebase } from './FirebaseConfig';
@@ -39,52 +39,47 @@ export default function QuizScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={isAnalyzing}
-        onRequestClose={() => {
-          setIsAnalyzing(false);
-        }}
-      >
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <Animated.Text style={{...styles.modalText, opacity: fadeAnim}}>
-              Analyzing image using OpenAI...
-            </Animated.Text>
-          </View>
-        </View>
-      </Modal>
-  
+
       <View style={styles.header}>
         <Image
           source={require('../assets/header.png')}
           style={styles.image}
         />
-        <View style={styles.backButtonContainer}>
-          <TouchableOpacity onPress={() => navigation.navigate('Land Pollution')}>
+        <View style={[styles.backButtonContainer, {flexDirection: 'row', justifyContent: 'space-between'}]}>
+          <TouchableOpacity onPress={() => {
+              Alert.alert(
+                "Stop Quiz",
+                "If you stop the quiz, progress cannot be saved. Do you want to continue?",
+                [
+                  {
+                    text: "No",
+                    onPress: () => console.log("Cancel Pressed"),
+                    style: "cancel"
+                  },
+                  { text: "Yes", onPress: () => navigation.navigate('Land Pollution') }
+                ],
+                { cancelable: false }
+              );
+            }}>
             <Image
               source={require('../assets/round-back.png')}
               style={styles.backButtonImage}
             />
           </TouchableOpacity>
           <Text style={styles.headerText}>Quiz Time</Text>
+          <Text style={styles.levelText}>1/10</Text>
         </View>
       </View>
 
-      <Text style={styles.labelText}>Challenge #</Text>
+      <Text style={styles.labelText}>Quiz: Land Pollution</Text>
 
-      {image ? (
-        <Image source={{ uri: image }} style={styles.playButton} />
-      ) : (
         <TouchableOpacity style={styles.playButton} onPress={() => null }>
-          <Text style={styles.playButtonText2}>Question</Text>
+          <Text style={styles.playButtonText2}>This is the question of the quiz!</Text>
         </TouchableOpacity>
-      )}
 
       {isCorrect !== null && (
         <Text style={[styles.judgeText, { color: isCorrect ? 'orange' : 'red' }]}>
-          {isCorrect ? 'Congratulations! This is the right image.' : 'Oops. This seems to be the wrong item.'}
+          {isCorrect ? 'Congratulations! This is the correct answer.' : 'Oops. This seems to be the wrong answer.'}
         </Text>
       )}
 
@@ -92,10 +87,16 @@ export default function QuizScreen({ navigation }) {
           {isCorrect === null ? (
             <>
               <TouchableOpacity style={styles.button1} onPress={ null }>
-                <Text style={styles.buttonText}>Take a Photo</Text>
+                <Text style={styles.buttonText}>Choice 1</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.button2} onPress={ null }>
-                <Text style={styles.buttonText}>Upload a Photo</Text>
+              <TouchableOpacity style={styles.button1} onPress={ null }>
+                <Text style={styles.buttonText}>Choice 2</Text>
+              </TouchableOpacity>
+                <TouchableOpacity style={styles.button1} onPress={ null }>
+                  <Text style={styles.buttonText}>Choice 3</Text>
+                </TouchableOpacity>
+              <TouchableOpacity style={styles.button1} onPress={ null }>
+                <Text style={styles.buttonText}>Choice 4</Text>
               </TouchableOpacity>
             </>
           ) : isCorrect ? (
@@ -162,11 +163,10 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
   },
   playButtonText2: {
-    color: '#fff',
+    color: 'black',
     fontWeight: 'bold',
-    fontSize: width * 0.1,
+    fontSize: width * 0.055,
     alignSelf: 'center',
-    marginTop: width * 0.125,
   },
   header: {
     height: '23%',
@@ -174,9 +174,9 @@ const styles = StyleSheet.create({
   },
   labelText: {
     color: '#3b5a9d',
+    alignSelf: 'center',
     fontSize: width * 0.07,
     fontWeight: 'bold',
-    marginLeft: width * 0.1,
     marginBottom: 20,
   },
   judgeText: {
@@ -185,24 +185,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 20,
   },
-  playButton: {
-    backgroundColor: '#4fb2aa',
-    width: '75%',
-    height: '25%',
-    alignSelf: 'center',
-    borderRadius: 20,
-    overflow: 'hidden',
-    padding: 10,
-    alignItems: 'flex-start', 
-    marginTop: height * 0.005,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
+    playButton: {
+      backgroundColor: '#f4f4f4',
+      width: '85%',
+      height: '25%',
+      alignSelf: 'center',
+      borderRadius: 20,
+      overflow: 'hidden',
+      justifyContent: 'center',
+      padding: 20,
+      alignItems: 'center',
+      marginTop: height * 0.005,
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.5, // Increased opacity
+      shadowRadius: 5, // Increased radius
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
   image: {
     width: '100%',
     height: '80%',
@@ -246,15 +247,20 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold'
   },
+  levelText: {
+    marginLeft: width * 0.225,
+    fontSize: width * 0.05,
+    color: 'white',
+  },
   button1: {
-    backgroundColor: '#3b5a9d',
+    backgroundColor: '#4fb2aa',
     justifyContent: 'center',
     borderRadius: 20,
     padding: 10,
     margin: 10,
     elevation: 5,
-    width: '80%',
-    height: '20%',
+    width: '85%',
+    height: '18%',
     alignItems: 'center',
     shadowColor: "#000",
     shadowOffset: {
