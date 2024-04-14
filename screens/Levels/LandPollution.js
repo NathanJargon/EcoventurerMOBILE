@@ -40,21 +40,32 @@ export default function LandPollution({ navigation }) {
 
   useEffect(() => {
     console.log(levelProgress); 
-    if (levelProgress[0] >= 10) {
+    if (levelProgress[0] >= 10 && levelUnlocked !== 1) {
       console.log('Setting isModalVisible to true'); 
-      // Add a delay before setting the modal visibility
       setTimeout(() => setIsModalVisible(true), 200);
+      const updateProgress = async () => {
+        await saveProgress(0, levelProgress[0]);
+      };
+      updateProgress();
     }
-  }, [levelProgress]);
+  }, [levelProgress, levelUnlocked]);
 
   const saveProgress = async (level, progress) => {
     const user = firebase.auth().currentUser;
     const newLevelProgress = [...levelProgress];
     newLevelProgress[level] = progress;
     setLevelProgress(newLevelProgress);
-    await firebase.firestore().collection('users').doc(user.email).update({
-      levelProgress: newLevelProgress,
-    });
+    if (level === 0 && progress >= 10) {
+      setLevelUnlocked(1);
+      await firebase.firestore().collection('users').doc(user.email).update({
+        levelProgress: newLevelProgress,
+        levelUnlocked: 1, // Add this line
+      });
+    } else {
+      await firebase.firestore().collection('users').doc(user.email).update({
+        levelProgress: newLevelProgress,
+      });
+    }
   };
 
   const trashes = [

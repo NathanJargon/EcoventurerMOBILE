@@ -31,7 +31,7 @@ export default function LeaderboardScreen({ navigation }) {
       case 1:
         return 'silver';
       case 2:
-        return 'bronze';
+        return '#cd7f32';
       default:
         return '#4fb2aa';
     }

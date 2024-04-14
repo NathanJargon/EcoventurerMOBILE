@@ -1,73 +1,39 @@
 import React, { useEffect, useState } from 'react';
 import { FlatList, View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
 import { firebase } from './FirebaseConfig';
-import { useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
-export default function DiaryScreen({ navigation }) {
-  const [banners, setBanners] = useState([]);
-  const [borders, setBorders] = useState([]);
+export default function EditScreen({ route, navigation }) {
+  const { email } = route.params;
   const [isLoading, setIsLoading] = useState(true);
   const [users, setUsers] = useState([]);
+  const [banner, setBanner] = useState(null);
+  const [border, setBorder] = useState(null);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      const unsubscribeUsers = firebase.firestore().collection('users')
-        .onSnapshot((snapshot) => {
-          const newUsers = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data()
-          }));
+  useEffect(() => {
+  const userRef = firebase.firestore().collection('users').doc(email);
+  userRef.get().then((doc) => {
+    if (doc.exists) {
+      const user = doc.data();
+      setUsers([user]);
+      setIsLoading(false);
+    } else {
+      console.log("No such document!");
+    }
+  }).catch((error) => {
+    console.log("Error getting document:", error);
+  });
+}, []);
 
-          setUsers(newUsers);
-        });
+  const currentUser = users.find(user => user.email === email); 
+  const purchasedItems = currentUser ? currentUser.purchasedItems : [];
+  
+  const banners = purchasedItems.filter(item => item.startsWith('banner'));
+  const borders = purchasedItems.filter(item => item.startsWith('border'));
+  const diaryImages = currentUser ? currentUser.diary : [];
 
-      const unsubscribeBanners = firebase.firestore().collection('banner')
-        .onSnapshot((snapshot) => {
-          const newItems = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-
-          setBanners(newItems);
-        });
-
-      const unsubscribeBorders = firebase.firestore().collection('border')
-        .onSnapshot((snapshot) => {
-          const newItems = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-
-          setBorders(newItems);
-          setIsLoading(false);
-        });
-
-      return () => {
-        unsubscribeUsers();
-        unsubscribeBanners();
-        unsubscribeBorders();
-      };
-    }, [])
-  );
-
-  const currentUserEmail = firebase.auth().currentUser.email;
-  const otherUsers = users.filter(user => user.email !== currentUserEmail);
-  const usersWithDiary = users.filter(user => user.diary && user.diary.some(imageUri => imageUri !== ''));
-  const diaries = usersWithDiary.flatMap(user => 
-    user.diary
-      .filter(imageUri => imageUri.startsWith('https'))
-      .map((imageUri, index) => ({
-        imageUri,
-        index,
-        name: user.name,
-        id: user.id,
-        neededPoints: user.neededPoints,
-        email: user.email, 
-      }))
-  );
-
+  
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -82,42 +48,68 @@ export default function DiaryScreen({ navigation }) {
               style={styles.backButtonImage}
             />
           </TouchableOpacity>
-          <Text style={styles.storeText}>Diaries</Text>
+          <Text style={styles.storeText}>Edit your Diary</Text>
         </View>
       </View>
 
-        {isLoading ? (
+            {isLoading ? (
         <View style={styles.loadingContainer}>
           <Image source={require('../assets/icons/loading.png')} style={styles.loadingImage} />
         </View>
       ) : (
         <>
-          <Text style={styles.sectionTitle}>Other people's diary</Text>
+          <Text style={styles.sectionTitle}>Banner</Text>
           <FlatList
-            data={diaries}
+            data={banners}
+            keyExtractor={item => item}
+            horizontal 
+            renderItem={({ item: banner }) => (
+              <View style={styles.box}>
+                <Image source={imageMap[banner] || require('../assets/bg1.jpg')} style={styles.boxImage} />
+                <TouchableOpacity style={styles.button} onPress={() => setBanner(banner)}>
+                  <Text style={styles.buttonText}>
+                    {banner === currentUser.currentBanner ? 'Current Banner' : 'Set Banner'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          />
+
+          <Text style={styles.sectionTitle}>Border</Text>
+          <FlatList
+            data={borders}
+            keyExtractor={item => item}
+            horizontal
+            renderItem={({ item: border }) => (
+              <View style={styles.box}>
+                <Image source={imageMap[border] || require('../assets/bg1.jpg')} style={styles.boxImage} />
+                <TouchableOpacity style={styles.button} onPress={() => setBorder(border)}>
+                  <Text style={styles.buttonText}>
+                    {border === currentUser.currentBorder ? 'Current Border' : 'Set Border'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          />
+          <Text style={styles.sectionTitle}>Diary</Text>
+          <FlatList
+            data={diaryImages}
+            keyExtractor={item => item}
             numColumns={2}
-            keyExtractor={item => `${item.id}-${item.index}`}
-            renderItem={({ item }) => (
-              item.imageUri !== '' && (
-                <View style={styles.box}>
-                  <Image source={{ uri: item.imageUri }} style={styles.boxImage} />
-                  <TouchableOpacity 
-                    style={styles.button} 
-                    onPress={() => navigation.navigate('User', { email: item.email })}
-                  >
-                    <Text style={styles.buttonText}>{item.name}</Text>
-                  </TouchableOpacity>
-                </View>
-              )
+            key={2}
+            renderItem={({ item: image }) => (
+              <View style={styles.box}>
+                <Image source={{ uri: image }} style={styles.boxImage} />
+              </View>
             )}
           />
         </>
       )}
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate('Edit')}
+        onPress={() => navigation.navigate('Diary')}
       >
-        <Image source={require('../assets/icons/edit.png')} style={styles.fabIcon} />
+        <Image source={require('../assets/icons/view.png')} style={styles.fabIcon} />
       </TouchableOpacity>
     </View>
   );

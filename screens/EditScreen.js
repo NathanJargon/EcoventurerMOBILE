@@ -7,7 +7,9 @@ const { width, height } = Dimensions.get('window');
 export default function EditScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(true);
   const [users, setUsers] = useState([]);
-
+  const [banner, setBanner] = useState(null);
+  const [border, setBorder] = useState(null);
+  
   const currentUserEmail = firebase.auth().currentUser.email;
 
   useEffect(() => {

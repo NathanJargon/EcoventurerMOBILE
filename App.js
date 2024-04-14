@@ -17,6 +17,7 @@ import LeaderboardScreen from './screens/LeaderboardsScreen';
 import DiaryScreen from './screens/DiaryScreen';
 import EditScreen from './screens/EditScreen';
 import QuizScreen from './screens/QuizScreen';
+import UserScreen from './screens/UserScreen';
 
 const Stack = createStackNavigator();
 
@@ -92,6 +93,11 @@ export default function App() {
         <Stack.Screen
           name="Quiz"
           component={QuizScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="User"
+          component={UserScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
