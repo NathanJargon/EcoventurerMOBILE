@@ -51,6 +51,16 @@ export default function SignUpScreen2({ navigation }) {
         return;
       }
 
+        const defaultBanner = {
+          id: "",
+          imageUri: ""
+        };
+
+        const defaultBorder = {
+          id: "",
+          imageUri: ""
+        };
+
       firebase
         .auth()
         .createUserWithEmailAndPassword(email, password)
@@ -70,6 +80,8 @@ export default function SignUpScreen2({ navigation }) {
             levelProgress: [0, 0, 0],
             diary: [],
             currentChallenge: 0,
+              currentBanner: defaultBanner,
+              currentBorder: defaultBorder,
           };
           const usersRef = firebase.firestore().collection('users');
           usersRef

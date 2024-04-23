@@ -8,6 +8,25 @@ export default function StoreScreen({ navigation }) {
   const [banners, setBanners] = useState([]);
   const [borders, setBorders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userData, setUserData] = useState(null);
+
+
+    useEffect(() => {
+      const user = firebase.auth().currentUser;
+
+      const unsubscribeUser = firebase.firestore().collection('users').doc(user.email)
+        .onSnapshot((doc) => {
+          if (doc.exists) {
+            setUserData(doc.data());
+          } else {
+            console.log("No such document!");
+          }
+        });
+
+      return () => {
+        unsubscribeUser();
+      };
+    }, []);
 
   useEffect(() => {
     const unsubscribeBanners = firebase.firestore().collection('banner')
@@ -37,29 +56,29 @@ export default function StoreScreen({ navigation }) {
     };
   }, []);
 
-  const onPurchase = async (itemId, neededPoints) => {
-    const user = firebase.auth().currentUser;
-  
-    const doc = await firebase.firestore().collection('users').doc(user.uid).get();
-    const userData = doc.data();
-  
-    if (userData.points < neededPoints) {
-      alert('Insufficient points.');
-      return;
-    }
-  
-    firebase.firestore().collection('users').doc(user.uid).update({
-      purchasedItems: firebase.firestore.FieldValue.arrayUnion(itemId),
-      points: userData.points - neededPoints,
-    })
-    .then(() => {
-      alert('Item purchased successfully!');
-    })
-    .catch((error) => {
-      console.error("Error updating document: ", error);
-    });
-  };
-  
+    const onPurchase = async (itemId, neededPoints, imageUri) => {
+      const user = firebase.auth().currentUser;
+
+      const doc = await firebase.firestore().collection('users').doc(user.email).get();
+      const userData = doc.data();
+
+      if (userData.points < neededPoints) {
+        alert('Insufficient points.');
+        return;
+      }
+
+      firebase.firestore().collection('users').doc(user.email).update({
+        purchasedItems: firebase.firestore.FieldValue.arrayUnion({id: itemId, imageUri: imageUri}),
+        points: userData.points - neededPoints,
+      })
+      .then(() => {
+        // alert('Item purchased successfully!');
+      })
+      .catch((error) => {
+        console.error("Error updating document: ", error);
+      });
+    };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -78,39 +97,51 @@ export default function StoreScreen({ navigation }) {
         </View>
       </View>
 
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <Image source={require('../assets/icons/loading.png')} style={styles.loadingImage} />
-        </View>
-      ) : (
-        <>
-          <Text style={styles.sectionTitle}>Banner</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {banners.map((item) => (
-            <View key={item.id} style={styles.box}>
-              <Image source={item.imageUri ? { uri: item.imageUri } : require('../assets/bg1.jpg')} style={styles.boxImage} />
-              <TouchableOpacity style={styles.button} onPress={() => onPurchase(item.id, item.neededPoints)}>
-                <Text style={styles.buttonText}>{item.neededPoints} Points</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-          </ScrollView>
+        {isLoading || !userData ? (
+          <View style={styles.loadingContainer}>
+            <Image source={require('../assets/icons/loading.png')} style={styles.loadingImage} />
+          </View>
+        ) : (
+          <>
+            <Text style={styles.sectionTitle}>Banner</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {banners.map((item) => (
+                  <View key={item.id} style={[styles.box, userData.purchasedItems.some(purchasedItem => purchasedItem.id === item.id)]}>
+                    <Image source={item.imageUri ? { uri: item.imageUri } : require('../assets/bg1.jpg')} style={styles.boxImage} />
+                    {userData.purchasedItems.some(purchasedItem => purchasedItem.id === item.id) ? (
+                      <View style={[styles.button, {backgroundColor: 'grey'}]}>
+                        <Text style={styles.buttonText}>Purchased</Text>
+                      </View>
+                    ) : (
+                      <TouchableOpacity style={styles.button} onPress={() => onPurchase(item.id, item.neededPoints, item.imageUri)}>
+                        <Text style={styles.buttonText}>{item.neededPoints} Points</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ))}
+            </ScrollView>
 
-          <Text style={styles.sectionTitle}>Border</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {borders.map((item) => (
-            <View key={item.id} style={styles.box}>
-              <Image source={item.imageUri ? { uri: item.imageUri } : require('../assets/bg1.jpg')} style={styles.boxImage} />
-              <TouchableOpacity style={styles.button} onPress={() => onPurchase(item.id, item.neededPoints)}>
-                <Text style={styles.buttonText}>{item.neededPoints} Points</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-          </ScrollView>
-        </>
-      )}
-    </View>
-  );
+            <Text style={styles.sectionTitle}>Border</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {borders.map((item) => (
+                  <View key={item.id} style={[styles.box, userData.purchasedItems.some(purchasedItem => purchasedItem.id === item.id)]}>
+                    <Image source={item.imageUri ? { uri: item.imageUri } : require('../assets/bg1.jpg')} style={styles.boxImage} />
+                    {userData.purchasedItems.some(purchasedItem => purchasedItem.id === item.id) ? (
+                      <View style={[styles.button, {backgroundColor: 'grey'}]}>
+                        <Text style={styles.buttonText}>Purchased</Text>
+                      </View>
+                    ) : (
+                      <TouchableOpacity style={styles.button} onPress={() => onPurchase(item.id, item.neededPoints, item.imageUri)}>
+                        <Text style={styles.buttonText}>{item.neededPoints} Points</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ))}
+            </ScrollView>
+          </>
+        )}
+      </View>
+    );
 }
 
 const styles = StyleSheet.create({
@@ -118,6 +149,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
   },
+   purchasedText: {
+     color: 'black',
+     fontWeight: 'bold',
+     textAlign: 'center',
+   },
   header: {
     height: '23%',
     width: '100%',

@@ -21,7 +21,7 @@ export default function EditScreen({ navigation }) {
         }));
   
         setUsers(newUsers);
-        setIsLoading(false); // set loading to false after data is fetched
+        setIsLoading(false);
       });
   
     return () => {
@@ -29,13 +29,30 @@ export default function EditScreen({ navigation }) {
     };
   }, []);
 
-  const currentUser = users.find(user => user.email === currentUserEmail);
-  const purchasedItems = currentUser ? currentUser.purchasedItems : [];
-  
-  const banners = purchasedItems.filter(item => item.startsWith('banner'));
-  const borders = purchasedItems.filter(item => item.startsWith('border'));
-  
-  
+    const setCurrentBanner = (banner) => {
+      setBanner(banner);
+
+      firebase.firestore().collection('users').doc(currentUser.email).update({
+        currentBanner: banner
+      });
+    };
+
+    const setCurrentBorder = (border) => {
+      setBorder(border);
+
+      firebase.firestore().collection('users').doc(currentUser.email).update({
+        currentBorder: border
+      });
+    };
+
+    const currentUser = users.find(user => user.email === currentUserEmail);
+
+    const purchasedItems = currentUser ? currentUser.purchasedItems : [];
+    console.log(purchasedItems);
+
+    const banners = purchasedItems.filter(item => item.id.startsWith('banner'));
+    const borders = purchasedItems.filter(item => item.id.startsWith('border'));
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -64,32 +81,46 @@ export default function EditScreen({ navigation }) {
           <FlatList
             data={banners}
             keyExtractor={item => item}
-            renderItem={({ item: banner }) => (
-              <View style={styles.box}>
-                <Image source={imageMap[banner] || require('../assets/bg1.jpg')} style={styles.boxImage} />
-                <TouchableOpacity style={styles.button} onPress={() => setBanner(banner)}>
-                  <Text style={styles.buttonText}>
-                    {banner === currentUser.currentBanner ? 'Current Banner' : 'Set Banner'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
+            renderItem={({ item: banner }) => {
+              return (
+                <View style={styles.box}>
+                  <Image source={{ uri: banner.imageUri || 'https://firebasestorage.googleapis.com/v0/b/cameragame-7051b.appspot.com/o/banners%2Fbanner-placeholder.jpg?alt=media&token=b25d671a-3958-4cc5-8d26-81235fc5abe2' }} style={styles.boxImage} />
+                  <TouchableOpacity
+                  style={[
+                    styles.button,
+                    { backgroundColor: border.id === currentUser.currentBorder.id ? 'grey' : '#ffa633' }
+                  ]}  onPress={() => setCurrentBanner(banner)}>
+                    <Text style={styles.buttonText}>
+                      {banner.id === currentUser.currentBanner.id ? 'Current Banner' : 'Set Banner'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            }}
           />
 
           <Text style={styles.sectionTitle}>Border</Text>
           <FlatList
             data={borders}
             keyExtractor={item => item}
-            renderItem={({ item: border }) => (
-              <View style={styles.box}>
-                <Image source={imageMap[border] || require('../assets/bg1.jpg')} style={styles.boxImage} />
-                <TouchableOpacity style={styles.button} onPress={() => setBorder(border)}>
-                  <Text style={styles.buttonText}>
-                    {border === currentUser.currentBorder ? 'Current Border' : 'Set Border'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
+            renderItem={({ item: border }) => {
+              return (
+                <View style={styles.box}>
+                  <Image source={{ uri: border.imageUri || 'https://firebasestorage.googleapis.com/v0/b/cameragame-7051b.appspot.com/o/banners%2Fbanner-placeholder.jpg?alt=media&token=b25d671a-3958-4cc5-8d26-81235fc5abe2' }} style={styles.boxImage} />
+                    <TouchableOpacity
+                      style={[
+                        styles.button,
+                        { backgroundColor: border.id === currentUser.currentBorder.id ? 'grey' : '#ffa633' }
+                      ]}
+                      onPress={() => setCurrentBorder(border)}
+                    >
+                      <Text style={styles.buttonText}>
+                        {border.id === currentUser.currentBorder.id ? 'Current Border' : 'Set Border'}
+                      </Text>
+                    </TouchableOpacity>
+                </View>
+              );
+            }}
           />
         </>
       )}
