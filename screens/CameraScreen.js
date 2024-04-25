@@ -91,7 +91,7 @@ export default function CameraScreen({ route, navigation }) {
       .then(function(response) {
         console.log("API call was successful. Response data:", response.data);
       
-        setUserDiary([...userDiary, imageUrl]);
+        setUserDiary([...userDiary, { imageUrl, correctAnswer: currentName }]);
       
         if (response.data.labels) {
           const labels = response.data.labels.replace(/[()]/g, '').split(', ').map(label => label.replace(/['"]/g, ''));
@@ -193,7 +193,7 @@ export default function CameraScreen({ route, navigation }) {
       .then(function(response) {
         console.log("API call was successful. Response data:", response.data);
       
-        setUserDiary([...userDiary, imageUrl]);
+        setUserDiary([...userDiary, { imageUrl, correctAnswer: currentName }]);
       
         if (response.data.labels) {
           const labels = response.data.labels.replace(/[()]/g, '').split(', ').map(label => label.replace(/['"]/g, ''));
@@ -265,7 +265,7 @@ export default function CameraScreen({ route, navigation }) {
               };
               
               userDiary.forEach(entry => {
-                updateObject['diary'] = firebase.firestore.FieldValue.arrayUnion(entry);
+                updateObject['diary'] = firebase.firestore.FieldValue.arrayUnion({ imageUrl: entry.imageUrl, correctAnswer: entry.correctAnswer });
               });
               
               userRef.update(updateObject);

@@ -38,17 +38,31 @@ export default function RecyclingWastes({ navigation }) {
     }, [])
   );
 
+  /*
+  const isFocused = useIsFocused();
+
   useEffect(() => {
-    console.log(levelProgress); 
-    if (levelProgress[0] >= 10 && levelUnlocked !== 1) {
-      console.log('Setting isModalVisible to true'); 
-      setTimeout(() => setIsModalVisible(true), 200);
+    let timerId = null; 
+  
+    if (isFocused && levelProgress[0] >= 10 && !isModalVisible) {
+      timerId = setInterval(() => setIsModalVisible(true), 300000);
       const updateProgress = async () => {
         await saveProgress(0, levelProgress[0]);
       };
       updateProgress();
     }
-  }, [levelProgress, levelUnlocked]);
+  
+    return () => {
+      clearInterval(timerId); 
+    };
+  }, [levelProgress, isModalVisible, isFocused]);
+  */
+
+  const handleButtonClick = () => {
+    if (levelProgress[0] >= 10) {
+      setIsModalVisible(true);
+    }
+  };
 
   const saveProgress = async (level, progress) => {
     const user = firebase.auth().currentUser;
@@ -133,21 +147,31 @@ export default function RecyclingWastes({ navigation }) {
 
         </Modal>
 
-      <View style={styles.header}>
-        <Image
-          source={require('../../assets/header.png')}
-          style={styles.image}
-        />
-        <View style={styles.backButtonContainer}>
-          <TouchableOpacity onPress={() => navigation.navigate('Game')}>
-            <Image
-              source={require('../../assets/round-back.png')}
-              style={styles.backButtonImage}
-            />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>Go Back</Text>
+        <View style={styles.header}>
+          <Image
+            source={require('../../assets/header.png')}
+            style={styles.image}
+          />
+          <View style={styles.backButtonContainer}>
+            <TouchableOpacity onPress={() => navigation.navigate('Game')}>
+              <Image
+                source={require('../../assets/round-back.png')}
+                style={styles.backButtonImage}
+              />
+            </TouchableOpacity>
+            <Text style={styles.headerText}>Go Back</Text>
+          </View>
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <TouchableOpacity onPress={handleButtonClick} style={{ alignItems: 'center', justifyContent: 'center', flexDirection: 'row', backgroundColor: '#4fb2aa', padding: 10,
+              width: width * 0.8, height: height * 0.075, borderRadius: 20, }}>
+              <Image
+                source={require('../../assets/icons/completed.png')} 
+                style={{ width: 30, height: 30, marginRight: 5 }} 
+              />
+              <Text style={{ marginLeft: 5, color: '#fff' }}>{levelProgress[1] >= 10 ? 'Press to take quiz!' : 'Finish all challenges to take quiz!'}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
 
       <Text style={styles.labelText}>Accomplish the following challenges:</Text>
 
@@ -184,7 +208,7 @@ export default function RecyclingWastes({ navigation }) {
           key={index}
           style={playButtonStyle}
           onPress={() => {
-            if (index < levelProgress[0] ) {
+            if (index < levelProgress[1] ) {
               Alert.alert(
                 'Rechallenge?',
                 'You have already completed this challenge. Would you try again?',
@@ -200,7 +224,7 @@ export default function RecyclingWastes({ navigation }) {
                   },
                 ]
               );
-            } else if (index <= levelProgress[0]) {
+            } else if (index <= levelProgress[1]) {
               navigation.navigate('Camera', { object: { challengeNumber: index + 1, trash: trashes[index] } });
             } else {
               Alert.alert('Locked', `Finish Challenge #${index} to unlock this challenge.`);
@@ -210,7 +234,7 @@ export default function RecyclingWastes({ navigation }) {
           <View style={styles.textContainer}>
             <Text style={styles.playButtonText}>{`Challenge #${index + 1}`}</Text>
           </View>
-          {index < levelProgress[0] && (
+          {index < levelProgress[1] && (
             <Image
               source={require('../../assets/icons/completed.png')} 
               style={styles.completedIcon} 
@@ -321,6 +345,7 @@ const styles = StyleSheet.create({
   },
   labelText: {
     color: '#3b5a9d',
+    marginTop: 30,
     margin: 10,
   },
   textContainer: {

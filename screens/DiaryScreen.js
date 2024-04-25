@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FlatList, View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { FlatList, View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Dimensions, ImageBackground } from 'react-native';
 import { firebase } from './FirebaseConfig';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -57,9 +57,10 @@ export default function DiaryScreen({ navigation }) {
   const usersWithDiary = users.filter(user => user.diary && user.diary.some(imageUri => imageUri !== ''));
   const diaries = usersWithDiary.flatMap(user => 
     user.diary
-      .filter(imageUri => imageUri.startsWith('https'))
-      .map((imageUri, index) => ({
-        imageUri,
+      .filter(entry => entry.imageUrl.startsWith('https'))
+      .map((entry, index) => ({
+        imageUri: entry.imageUrl,
+        correctAnswer: entry.correctAnswer,
         index,
         name: user.name,
         id: user.id,
@@ -67,6 +68,9 @@ export default function DiaryScreen({ navigation }) {
         email: user.email, 
       }))
   );
+  const currentUser = users.find(user => user.email === currentUserEmail);
+  const currentBanner = currentUser ? currentUser.currentBanner : null;
+  const currentBorder = currentUser ? currentUser.currentBorder : null;
 
   return (
     <View style={styles.container}>
@@ -92,7 +96,7 @@ export default function DiaryScreen({ navigation }) {
         </View>
       ) : (
         <>
-          <Text style={styles.sectionTitle}>Other people's diary</Text>
+          <Text style={styles.sectionTitle}>Latest diaries</Text>
           <FlatList
             data={diaries}
             numColumns={2}
@@ -100,12 +104,20 @@ export default function DiaryScreen({ navigation }) {
             renderItem={({ item }) => (
               item.imageUri !== '' && (
                 <View style={styles.box}>
-                  <Image source={{ uri: item.imageUri }} style={styles.boxImage} />
+                  <View style={styles.imageContainer}>
+                    <ImageBackground 
+                      source={{ uri: item.imageUri }} 
+                      style={styles.boxImage}
+                    />
+                    <Image source={{ uri: currentBorder ? currentBorder.imageUri : '' }} style={styles.borderImage} />
+                  </View>
                   <TouchableOpacity 
                     style={styles.button} 
                     onPress={() => navigation.navigate('User', { email: item.email })}
                   >
-                    <Text style={styles.buttonText}>{item.name}</Text>
+                    <Text style={styles.buttonText}>
+                      {`${item.name} (${item.correctAnswer.charAt(0).toUpperCase() + item.correctAnswer.slice(1)})`}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               )
@@ -128,6 +140,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
+  },
+  imageContainer: {
+  width: '90%',
+  height: '70%',
+  borderRadius: 20,
+  overflow: 'hidden',
+  },
+  boxImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+    overflow: 'hidden',
+    borderRadius: 20,
+  },
+  borderImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
   },
   fab: {
     position: 'absolute',
@@ -199,13 +232,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderRadius: 20,
   },
-  boxImage: {
-    width: '90%',
-    height: '70%',
-    resizeMode: 'cover',
-    overflow: 'hidden',
-    borderRadius: 20,
-  },
   button: {
     marginTop: 10,
     width: '90%',
@@ -214,6 +240,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   buttonText: {
+    fontSize: width * 0.025,
     color: 'white',
     fontWeight: 'bold',
     textAlign: 'center',

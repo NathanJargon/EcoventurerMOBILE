@@ -86,12 +86,13 @@ export default function EditScreen({ navigation }) {
                 <View style={styles.box}>
                   <Image source={{ uri: banner.imageUri || 'https://firebasestorage.googleapis.com/v0/b/cameragame-7051b.appspot.com/o/banners%2Fbanner-placeholder.jpg?alt=media&token=b25d671a-3958-4cc5-8d26-81235fc5abe2' }} style={styles.boxImage} />
                   <TouchableOpacity
-                  style={[
-                    styles.button,
-                    { backgroundColor: border.id === currentUser.currentBorder.id ? 'grey' : '#ffa633' }
-                  ]}  onPress={() => setCurrentBanner(banner)}>
+                    style={[
+                      styles.button,
+                      {backgroundColor: banner && banner.id === (currentUser.currentBanner ? currentUser.currentBanner.id : '') ? 'grey' : '#ffa633'}
+                    ]}  
+                    onPress={() => setCurrentBanner(banner)}>
                     <Text style={styles.buttonText}>
-                      {banner.id === currentUser.currentBanner.id ? 'Current Banner' : 'Set Banner'}
+                      {banner && banner.id === (currentUser.currentBanner ? currentUser.currentBanner.id : '') ? 'Current Banner' : 'Set Banner'}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -110,12 +111,12 @@ export default function EditScreen({ navigation }) {
                     <TouchableOpacity
                       style={[
                         styles.button,
-                        { backgroundColor: border.id === currentUser.currentBorder.id ? 'grey' : '#ffa633' }
+                        {backgroundColor: border && border.id === (currentUser.currentBorder ? currentUser.currentBorder.id : '') ? 'grey' : '#ffa633'}
                       ]}
                       onPress={() => setCurrentBorder(border)}
                     >
                       <Text style={styles.buttonText}>
-                        {border.id === currentUser.currentBorder.id ? 'Current Border' : 'Set Border'}
+                        {border && border.id === (currentUser.currentBorder ? currentUser.currentBorder.id : '') ? 'Current Border' : 'Set Border'}
                       </Text>
                     </TouchableOpacity>
                 </View>

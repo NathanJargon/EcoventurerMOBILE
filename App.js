@@ -18,6 +18,7 @@ import DiaryScreen from './screens/DiaryScreen';
 import EditScreen from './screens/EditScreen';
 import QuizScreen from './screens/QuizScreen';
 import UserScreen from './screens/UserScreen';
+import RecyclingWastes from './screens/Levels/RecyclingWastes';
 
 const Stack = createStackNavigator();
 
@@ -98,6 +99,11 @@ export default function App() {
         <Stack.Screen
           name="User"
           component={UserScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Recycling Wastes"
+          component={RecyclingWastes}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

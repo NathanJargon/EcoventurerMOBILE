@@ -3,7 +3,7 @@ import { Modal, ScrollView, Alert, ImageBackground, View, TouchableOpacity, Text
 import { TextInput } from 'react-native-paper';
 import { firebase } from '../FirebaseConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from '@react-navigation/native';
+import { useIsFocused, useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -38,33 +38,49 @@ export default function LandPollution({ navigation }) {
     }, [])
   );
 
+  /*
+  const isFocused = useIsFocused();
+
   useEffect(() => {
-    console.log(levelProgress); 
-    if (levelProgress[0] >= 10 && levelUnlocked !== 1) {
-      console.log('Setting isModalVisible to true'); 
-      setTimeout(() => setIsModalVisible(true), 200);
+    let timerId = null; 
+  
+    if (isFocused && levelProgress[0] >= 10 && !isModalVisible) {
+      timerId = setInterval(() => setIsModalVisible(true), 300000);
       const updateProgress = async () => {
         await saveProgress(0, levelProgress[0]);
       };
       updateProgress();
     }
-  }, [levelProgress, levelUnlocked]);
+  
+    return () => {
+      clearInterval(timerId); 
+    };
+  }, [levelProgress, isModalVisible, isFocused]);
+  */
+
+  const handleButtonClick = () => {
+    if (levelProgress[0] >= 10) {
+      setIsModalVisible(true);
+    }
+  };
 
   const saveProgress = async (level, progress) => {
     const user = firebase.auth().currentUser;
     const newLevelProgress = [...levelProgress];
-    newLevelProgress[level] = progress;
-    setLevelProgress(newLevelProgress);
-    if (level === 0 && progress >= 10) {
-      setLevelUnlocked(1);
-      await firebase.firestore().collection('users').doc(user.email).update({
-        levelProgress: newLevelProgress,
-        levelUnlocked: 1, // Add this line
-      });
-    } else {
-      await firebase.firestore().collection('users').doc(user.email).update({
-        levelProgress: newLevelProgress,
-      });
+    if (newLevelProgress[level] !== progress) {
+      newLevelProgress[level] = progress;
+      setLevelProgress(newLevelProgress);
+      if (level === 0 && progress >= 10) {
+        setLevelUnlocked(1);
+        await firebase.firestore().collection('users').doc(user.email).update({
+          levelProgress: newLevelProgress,
+          levelUnlocked: 1,
+        });
+      } else {
+        await firebase.firestore().collection('users').doc(user.email).update({
+          levelProgress: newLevelProgress,
+        });
+      }
     }
   };
 
@@ -133,21 +149,32 @@ export default function LandPollution({ navigation }) {
 
         </Modal>
 
-      <View style={styles.header}>
-        <Image
-          source={require('../../assets/header.png')}
-          style={styles.image}
-        />
-        <View style={styles.backButtonContainer}>
-          <TouchableOpacity onPress={() => navigation.navigate('Game')}>
-            <Image
-              source={require('../../assets/round-back.png')}
-              style={styles.backButtonImage}
-            />
-          </TouchableOpacity>
-          <Text style={styles.headerText}>Go Back</Text>
+        <View style={styles.header}>
+          <Image
+            source={require('../../assets/header.png')}
+            style={styles.image}
+          />
+          <View style={styles.backButtonContainer}>
+            <TouchableOpacity onPress={() => navigation.navigate('Game')}>
+              <Image
+                source={require('../../assets/round-back.png')}
+                style={styles.backButtonImage}
+              />
+            </TouchableOpacity>
+            <Text style={styles.headerText}>Go Back</Text>
+          </View>
+          <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <TouchableOpacity onPress={handleButtonClick} style={{ alignItems: 'center', justifyContent: 'center', flexDirection: 'row', backgroundColor: '#4fb2aa', padding: 10,
+              width: width * 0.8, height: height * 0.075, borderRadius: 20, }}>
+              <Image
+                source={require('../../assets/icons/completed.png')} 
+                style={{ width: 30, height: 30, marginRight: 5 }} 
+              />
+              <Text style={{ marginLeft: 5, color: '#fff' }}>{levelProgress[0] >= 10 ? 'Press to take quiz!' : 'Finish all challenges to take quiz!'}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+
 
       <Text style={styles.labelText}>Accomplish the following challenges:</Text>
 
@@ -321,6 +348,7 @@ const styles = StyleSheet.create({
   },
   labelText: {
     color: '#3b5a9d',
+    marginTop: 30,
     margin: 10,
   },
   textContainer: {

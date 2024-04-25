@@ -123,7 +123,7 @@ export default function GameScreen({ navigation }) {
               <Text style={styles.playButtonText}>{levelNames[index]}</Text>
               {index <= levelUnlocked ? (
                 <Text style={styles.challengesText}>
-                  {`${levelProgress[0] || 0}/10 Challenges`}
+                  {`${levelProgress[index] || 0}/10 Challenges`}
                 </Text>
               ) : (
                 <View style={{ opacity: 1 }}>
