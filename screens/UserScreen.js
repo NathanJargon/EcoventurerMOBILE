@@ -28,9 +28,6 @@ export default function EditScreen({ route, navigation }) {
 
   const currentUser = users.find(user => user.email === email); 
   const purchasedItems = currentUser ? currentUser.purchasedItems : [];
-  
-  const banners = purchasedItems.filter(item => item.startsWith('banner'));
-  const borders = purchasedItems.filter(item => item.startsWith('border'));
   const diaryImages = currentUser ? currentUser.diary : [];
 
   
@@ -42,75 +39,36 @@ export default function EditScreen({ route, navigation }) {
           style={styles.image}
         />
         <View style={styles.backButtonContainer}>
-          <TouchableOpacity onPress={() => navigation.navigate('Home')}>
+          <TouchableOpacity onPress={() => navigation.navigate('Diary')}>
             <Image
               source={require('../assets/round-back.png')}
               style={styles.backButtonImage}
             />
           </TouchableOpacity>
-          <Text style={styles.storeText}>Edit your Diary</Text>
+          <Text style={styles.storeText}>User Diary</Text>
         </View>
       </View>
 
-            {isLoading ? (
+      {isLoading ? (
         <View style={styles.loadingContainer}>
           <Image source={require('../assets/icons/loading.png')} style={styles.loadingImage} />
         </View>
       ) : (
         <>
-          <Text style={styles.sectionTitle}>Banner</Text>
-          <FlatList
-            data={banners}
-            keyExtractor={item => item}
-            horizontal 
-            renderItem={({ item: banner }) => (
-              <View style={styles.box}>
-                <Image source={imageMap[banner] || require('../assets/bg1.jpg')} style={styles.boxImage} />
-                <TouchableOpacity style={styles.button} onPress={() => setBanner(banner)}>
-                  <Text style={styles.buttonText}>
-                    {banner === currentUser.currentBanner ? 'Current Banner' : 'Set Banner'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          />
-
-          <Text style={styles.sectionTitle}>Border</Text>
-          <FlatList
-            data={borders}
-            keyExtractor={item => item}
-            horizontal
-            renderItem={({ item: border }) => (
-              <View style={styles.box}>
-                <Image source={imageMap[border] || require('../assets/bg1.jpg')} style={styles.boxImage} />
-                <TouchableOpacity style={styles.button} onPress={() => setBorder(border)}>
-                  <Text style={styles.buttonText}>
-                    {border === currentUser.currentBorder ? 'Current Border' : 'Set Border'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          />
-          <Text style={styles.sectionTitle}>Diary</Text>
+          <Text style={styles.sectionTitle}>{currentUser ? `${currentUser.name}'s Diaries` : 'Loading...'}</Text>
           <FlatList
             data={diaryImages}
-            keyExtractor={item => item}
+            keyExtractor={item => item.imageUrl}
             numColumns={2}
             key={2}
-            renderItem={({ item: image }) => (
+            renderItem={({ item }) => (
               <View style={styles.box}>
-                <Image source={{ uri: image }} style={styles.boxImage} />
+                <Image source={{ uri: item.imageUrl }} style={styles.boxImage} />
               </View>
             )}
           />
         </>
       )}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('Diary')}
-      >
-        <Image source={require('../assets/icons/view.png')} style={styles.fabIcon} />
-      </TouchableOpacity>
     </View>
   );
 }
@@ -193,7 +151,7 @@ const styles = StyleSheet.create({
   },
   boxImage: {
     width: '90%',
-    height: '70%',
+    height: '90%',
     resizeMode: 'cover',
     overflow: 'hidden',
     borderRadius: 20,

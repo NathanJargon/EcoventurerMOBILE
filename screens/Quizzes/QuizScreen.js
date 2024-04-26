@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Alert, Animated, Modal, StyleSheet, Text, Button, Image, View, Platform, Dimensions, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
-import { firebase } from './FirebaseConfig';
+import { firebase } from '../FirebaseConfig';
 
 const { width, height } = Dimensions.get('window');
 
@@ -120,7 +120,7 @@ export default function QuizScreen({ navigation }) {
 
       <View style={styles.header}>
         <Image
-          source={require('../assets/header.png')}
+          source={require('../../assets/header.png')}
           style={styles.image}
         />
         <View style={[styles.backButtonContainer, {flexDirection: 'row', justifyContent: 'space-between'}]}>
@@ -140,7 +140,7 @@ export default function QuizScreen({ navigation }) {
               );
             }}>
             <Image
-              source={require('../assets/round-back.png')}
+              source={require('../../assets/round-back.png')}
               style={styles.backButtonImage}
             />
           </TouchableOpacity>

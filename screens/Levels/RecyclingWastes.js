@@ -162,14 +162,27 @@ export default function RecyclingWastes({ navigation }) {
             <Text style={styles.headerText}>Go Back</Text>
           </View>
           <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-            <TouchableOpacity onPress={handleButtonClick} style={{ alignItems: 'center', justifyContent: 'center', flexDirection: 'row', backgroundColor: '#4fb2aa', padding: 10,
-              width: width * 0.8, height: height * 0.075, borderRadius: 20, }}>
-              <Image
-                source={require('../../assets/icons/completed.png')} 
-                style={{ width: 30, height: 30, marginRight: 5 }} 
-              />
-              <Text style={{ marginLeft: 5, color: '#fff' }}>{levelProgress[1] >= 10 ? 'Press to take quiz!' : 'Finish all challenges to take quiz!'}</Text>
-            </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={levelProgress[1] >= 10 ? handleButtonClick : null} 
+            style={{ 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              flexDirection: 'row', 
+              backgroundColor: '#4fb2aa', 
+              padding: 10,
+              width: width * 0.8, 
+              height: height * 0.075, 
+              borderRadius: 20, 
+              opacity: levelProgress[1] >= 10 ? 1 : 0.5
+            }}
+            disabled={levelProgress[1] < 10}
+          >
+            <Image
+              source={require('../../assets/icons/completed.png')} 
+              style={{ width: 30, height: 30, marginRight: 5 }} 
+            />
+            <Text style={{ marginLeft: 5, color: '#fff' }}>{levelProgress[1] >= 10 ? 'Press to take quiz!' : 'Finish all challenges to take quiz!'}</Text>
+          </TouchableOpacity>
           </View>
         </View>
 
@@ -220,12 +233,12 @@ export default function RecyclingWastes({ navigation }) {
                   },
                   {
                     text: 'Yes',
-                    onPress: () => navigation.navigate('Camera', { object: { challengeNumber: index + 1, trash: trashes[index] } }),
+                    onPress: () => navigation.navigate('Camera', { object: { challengeNumber: index + 1, trash: trashes[index] }, trashes: trashes }),
                   },
                 ]
               );
-            } else if (index <= levelProgress[1]) {
-              navigation.navigate('Camera', { object: { challengeNumber: index + 1, trash: trashes[index] } });
+            } else if (index <= levelProgress[0]) {
+              navigation.navigate('Camera', { object: { challengeNumber: index + 1, trash: trashes[index] }, trashes: trashes });
             } else {
               Alert.alert('Locked', `Finish Challenge #${index} to unlock this challenge.`);
             }

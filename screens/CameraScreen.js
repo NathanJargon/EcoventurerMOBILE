@@ -8,7 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const { width, height } = Dimensions.get('window');
 
 export default function CameraScreen({ route, navigation }) {
-  const { object } = route.params;
+  const { object, trashes } = route.params;
   const { challengeNumber, trash } = object;
   const { name, level } = trash;
   const [isCorrect, setIsCorrect] = useState(null);
@@ -317,20 +317,6 @@ export default function CameraScreen({ route, navigation }) {
     })();
   }, []);
   
-
-  const trashes = [
-    { name: 'Plastic', level: 1 },
-    { name: 'Glass', level: 2 },
-    { name: 'Metal', level: 3 },
-    { name: 'Paper', level: 4 },
-    { name: 'Cardboard', level: 5 },
-    { name: 'Textile', level: 6 },
-    { name: 'Rubber', level: 7 },
-    { name: 'Leather', level: 8 },
-    { name: 'Wood', level: 9 },
-    { name: 'Electronics', level: 10 },
-  ];
-
   useEffect(() => {
     console.log(currentLevel);
     console.log(currentName);
