@@ -264,16 +264,40 @@ export default function CameraScreen({ route, navigation }) {
                 currentChallenge: newChallenge
               };
               
-              userDiary.forEach(entry => {
-                updateObject['diary'] = firebase.firestore.FieldValue.arrayUnion({ imageUrl: entry.imageUrl, correctAnswer: entry.correctAnswer });
-              });
-              
-              userRef.update(updateObject);
+              const existingEntry = userData.diary.find(entry => entry.correctAnswer === currentName);
+              if (existingEntry) {
+                Alert.alert(
+                  "Replace Image",
+                  "This trash already exists in your diary. Do you want to replace the image?",
+                  [
+                    {
+                      text: "Cancel",
+                      style: "cancel"
+                    },
+                    { 
+                      text: "OK", 
+                      onPress: () => {
+                        updateObject['diary'] = userData.diary.map(entry => 
+                          entry.correctAnswer === currentName 
+                            ? { ...entry, imageUrl: userDiary[userDiary.length - 1].imageUrl } 
+                            : entry
+                        );
+                        userRef.update(updateObject);
+                      } 
+                    }
+                  ]
+                );
+              } else {
+                userDiary.forEach(entry => {
+                  updateObject['diary'] = firebase.firestore.FieldValue.arrayUnion({ imageUrl: entry.imageUrl, correctAnswer: entry.correctAnswer });
+                });
+                userRef.update(updateObject);
+              }
+              setHasUpdatedChallenge(true);
+            } else {
+              console.log("No such document!");
             }
-            setHasUpdatedChallenge(true);
-          } else {
-            console.log("No such document!");
-          }
+          } 
         }).catch((error) => {
           console.log("Error getting document:", error);
         });
@@ -317,6 +341,25 @@ export default function CameraScreen({ route, navigation }) {
     })();
   }, []);
   
+  const handleNextChallenge = async () => {
+    let nextChallenge = currentChallenge - 1;
+  
+    if (nextChallenge < trashes.length) {
+      setCurrentLevel(trashes[nextChallenge].level);
+      setCurrentName(trashes[nextChallenge].name);
+      
+      setIsCorrect(null);
+      setImage(null);
+      setCurrentChallenge(nextChallenge);
+    } else {
+      navigation.navigate('Land Pollution');
+    }
+  };
+
+  const handleMinigame = async () => {
+    navigation.navigate('Minigame');
+  };
+
   useEffect(() => {
     console.log(currentLevel);
     console.log(currentName);
@@ -391,23 +434,10 @@ export default function CameraScreen({ route, navigation }) {
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[ styles.button2, { height: '15%', } ]} 
-                onPress={async () => {
-                  let nextChallenge = currentChallenge - 1;
-
-                  if (nextChallenge < trashes.length) {
-                    setCurrentLevel(trashes[nextChallenge].level);
-                    setCurrentName(trashes[nextChallenge].name);
-                    
-                    setIsCorrect(null);
-                    setImage(null);
-                    setCurrentChallenge(nextChallenge);
-                  } else {
-                    navigation.navigate('Land Pollution');
-                  }
-                }}
+                onPress={handleMinigame}
               >
-              <Text style={styles.buttonText}>NEXT CHALLENGE</Text>
-            </TouchableOpacity>
+                <Text style={styles.buttonText}>NEXT MINIGAME</Text>
+              </TouchableOpacity>
             </>
           ) : (
             <TouchableOpacity style={[ styles.button1, { marginTop: height * 0.21, height: '25%'} ]} onPress={() => {
