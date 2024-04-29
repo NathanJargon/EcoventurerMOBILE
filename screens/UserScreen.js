@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FlatList, View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { ImageBackground, FlatList, View, Text, ScrollView, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
 import { firebase } from './FirebaseConfig';
 
 const { width, height } = Dimensions.get('window');
@@ -62,9 +62,17 @@ export default function EditScreen({ route, navigation }) {
             numColumns={2}
             key={2}
             renderItem={({ item }) => (
-              <View style={styles.box}>
-                <Image source={{ uri: item.imageUrl }} style={styles.boxImage} />
-              </View>
+              item.imageUrl !== '' && (
+                <View style={styles.box}>
+                  <View style={styles.imageContainer}>
+                    <ImageBackground 
+                      source={{ uri: item.imageUrl }} 
+                      style={styles.boxImage}
+                    />
+                    <Image source={{ uri: currentUser && currentUser.currentBorder ? currentUser.currentBorder.imageUri : '' }} style={styles.borderImage} />
+                  </View>
+                </View>
+              )
             )}
           />
         </>
@@ -79,6 +87,27 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
   },
+  imageContainer: {
+    width: '90%',
+    height: '80%',
+    borderRadius: 20,
+    overflow: 'hidden',
+    },
+    boxImage: {
+      width: '100%',
+      height: '100%',
+      resizeMode: 'cover',
+      overflow: 'hidden',
+      borderRadius: 20,
+    },
+    borderImage: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      resizeMode: 'contain',
+    },
   fab: {
     position: 'absolute',
     width: 56,
@@ -146,13 +175,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#4fb2aa',
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden',
-    borderRadius: 20,
-  },
-  boxImage: {
-    width: '90%',
-    height: '90%',
-    resizeMode: 'cover',
     overflow: 'hidden',
     borderRadius: 20,
   },
