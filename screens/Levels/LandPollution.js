@@ -165,7 +165,7 @@ export default function LandPollution({ navigation }) {
           </View>
           <View style={{ alignItems: 'center', justifyContent: 'center' }}>
           <TouchableOpacity 
-            onPress={levelProgress[1] >= 10 ? handleButtonClick : null} 
+            onPress={levelProgress[0] >= 10 ? handleButtonClick : null} 
             style={{ 
               alignItems: 'center', 
               justifyContent: 'center', 
@@ -175,15 +175,15 @@ export default function LandPollution({ navigation }) {
               width: width * 0.8, 
               height: height * 0.075, 
               borderRadius: 20, 
-              opacity: levelProgress[1] >= 10 ? 1 : 0.5
+              opacity: levelProgress[0] >= 10 ? 1 : 0.5
             }}
-            disabled={levelProgress[1] < 10}
+            disabled={levelProgress[0] < 10}
           >
             <Image
               source={require('../../assets/icons/completed.png')} 
               style={{ width: 30, height: 30, marginRight: 5 }} 
             />
-            <Text style={{ marginLeft: 5, color: '#fff' }}>{levelProgress[1] >= 10 ? 'Press to take quiz!' : 'Finish all challenges to take quiz!'}</Text>
+            <Text style={{ marginLeft: 5, color: '#fff' }}>{levelProgress[0] >= 10 ? 'Press to take quiz!' : 'Finish all challenges to take quiz!'}</Text>
           </TouchableOpacity>
           </View>
         </View>
