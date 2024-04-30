@@ -1,14 +1,18 @@
 # ExpoGarbageDetectionGame
 
+# Steps on building the project
 
 ## Download and Install Visual Studio Code
 
 1. Visit the Visual Studio Code download page and download the version suitable for your operating system.
+```https://code.visualstudio.com```
 2. Install Visual Studio Code by following the instructions provided by the installer.
 
 ## Install Node.js and npm
 
-1. Visit the Node.js download page and download the version suitable for your operating system.
+1. Visit the Node.js download page and download the version suitable for your operating system. 
+```https://nodejs.org/en```
+
 2. Install Node.js and npm by following the instructions provided by the installer.
 
 ## Install Expo CLI
@@ -18,7 +22,7 @@
 
 ## Main - Clone Your Project
 
-```git clone [<your_project_url>](https://github.com/NathanJargon/ExpoGarbageDetectionGame)```
+```git clone https://github.com/NathanJargon/ExpoGarbageDetectionGame```
 
 ## Alternative
 
