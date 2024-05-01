@@ -11,7 +11,7 @@ export default function GameScreen({ navigation }) {
   const [levelProgress, setLevelProgress] = useState([]);
   const [currentChallenge, setCurrentChallenge] = useState(0);
   const [loading, setLoading] = useState(true); 
-  const levelNames = ['Land Pollution', 'Recycling Wastes', 'Pollution'];
+  const levelNames = ['Air, Water, and Land Pollution', 'Animals and Plants', 'Recycling Wastes'];
 
   useEffect(() => {
     const fetchUserData = async () => {

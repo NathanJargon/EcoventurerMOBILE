@@ -8,62 +8,56 @@ const { width, height } = Dimensions.get('window');
 
 const questions = [
   {
-    questionText: 'Which of the following materials takes the longest to decompose in a landfill?',
-    choices: ['Plastic', 'Paper', 'Glass', 'Metal'],
-    correctAnswer: 'Plastic'
+    questionText: 'What do birds use their beaks for?',
+    choices: [
+      'For flying.',
+      'To show off for other birds when fighting.',
+      'For eating, building nests, and sometimes for defending themselves.',
+      'Destroying plants to and create their own nest.'
+    ],
+    correctAnswer: 'For eating, building nests, and sometimes for defending themselves.'
   },
   {
-    questionText: 'What is the importance of throwing plastic bottles in trashcans?',
+    questionText: 'What is the importance of Butterflies?',
     choices: [
-      'Placing plastic bottles in the trash helps to keep our environment clean and safe.',
-      'To build roads',
-      'To reduce noise pollution',
-      'To increase air pollution.'
+      'To only lay unfertilized eggs.',
+      'Help in plant reproduction and pollination.',
+      'For decoration purposes only.',
+      'To become food for other insects.'
     ],
-    correctAnswer: 'Placing plastic bottles in the trash helps to keep our environment clean and safe.'
+    correctAnswer: 'Help in plant reproduction and pollination.'
   },
   {
-    questionText: 'In what ways can you save up water from the faucet?',
+    questionText: 'What is the purpose of a flower on a plant?',
     choices: [
-      'By leaving the faucet running continuously.',
-      'By using water excessively and ignoring any leaks.',
-      'By carefully using it and properly closing it after usage.',
-      'By keeping the faucet open when not in use.'
+      'To produce seeds for plant reproduction.',
+      'Flowers do not have a purpose in the environment.',
+      'Used as decoration for events (weddings, birthdays, or anniversaries)',
+      'To lay eggs and turn into birds.'
     ],
-    correctAnswer: 'By carefully using it and properly closing it after usage.'
+    correctAnswer: 'To produce seeds for plant reproduction'
   },
   {
-    questionText: 'Why is it good to plant trees in our neighborhood?',
+    questionText: 'Why do people keep plants indoors?',
     choices: [
-      'Planting trees increases air pollution and worsens air quality.',
-      'Trees have no impact on preventing floods or improving air quality.',
-      'Planting trees in the neighborhood leads to a decrease in overall greenery and aesthetics.',
-      'Planting trees can prevent floods and makes the air cleaner'
+      'To attract pests and gather dust.',
+      'To attract good karma and money.',
+      'To let it grow without providing the plant with water and sunlight.',
+      'To keep plants indoors for decoration and improve air quality.'
     ],
-    correctAnswer: 'Planting trees can prevent floods and makes the air cleaner'
+    correctAnswer: 'To keep plants indoors for decoration and improve air quality'
   },
   {
-    questionText: 'How can you save energy at home?',
+    questionText: 'How can you take care of an indoor plant?',
     choices: [
-      'Turn on the lights for 24hrs',
-      'Replace the light bulb',
-      'By closing the lights or other electronics that are not being used.',
-      'Play with the light switch'
+      'Taking care of an indoor plant involves watering it regularly and placing it where it can get sunlight.',
+      'By letting the plant grow and not provide its needs such as water and sunlight.',
+      'By pouring chemicals to help with growth as alternatives to natural water.',
+      'There is no way to take care of an indoor plant.'
     ],
-    correctAnswer: 'By closing the lights or other electronics that are not being used.'
-  },
-  {
-    questionText: 'What are the benefits of reducing plastic waste?',
-    choices: [
-      'Increasing plastic waste helps in better resource utilization and recycling efficiency.',
-      'I keep our planet cleaner, save resources and reduce the problems in recycling',
-      'Plastic waste has no impact on the cleanliness of the planet or resource conservation.',
-      'Disposing of more plastic waste enhances the recycling process and reduces environmental issues.'
-    ],
-    correctAnswer: 'I keep our planet cleaner, save resources and reduce the problems in recycling'
+    correctAnswer: 'Taking care of an indoor plant involves watering it regularly and placing it where it can get sunlight.'
   }
 ];
-
 
 export default function QuizScreen({ navigation }) {
   const [isCorrect, setIsCorrect] = useState(null);
@@ -140,7 +134,7 @@ export default function QuizScreen({ navigation }) {
                     onPress: () => console.log("Cancel Pressed"),
                     style: "cancel"
                   },
-                  { text: "Yes", onPress: () => navigation.navigate('Land Pollution') }
+                  { text: "Yes", onPress: () => navigation.navigate('Recycling Wastes') }
                 ],
                 { cancelable: false }
               );
@@ -155,7 +149,7 @@ export default function QuizScreen({ navigation }) {
         </View>
       </View>
 
-      <Text style={styles.labelText}>Quiz: Pollution</Text>
+      <Text style={styles.labelText}>Quiz: Biodiversity</Text>
 
         <TouchableOpacity style={styles.playButton} onPress={() => null }>
           <Text style={styles.playButtonText2}>{currentQuestion.questionText}</Text>

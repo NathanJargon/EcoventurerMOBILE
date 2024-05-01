@@ -83,17 +83,48 @@ export default function RecyclingWastes({ navigation }) {
   };
 
   const trashes = [
-    { name: 'Plastic', level: 1 },
-    { name: 'Glass', level: 2 },
-    { name: 'Metal', level: 3 },
-    { name: 'Paper', level: 4 },
-    { name: 'Cardboard', level: 5 },
-    { name: 'Textile', level: 6 },
-    { name: 'Rubber', level: 7 },
-    { name: 'Leather', level: 8 },
-    { name: 'Wood', level: 9 },
-    { name: 'Electronics', level: 10 },
+    { 
+      name: 'Bird', 
+      description: 'Birds play an important role in ecosystems by pollinating plants, controlling pests, and preserving biodiversity. While their existence enhances the beauty of nature, habitat degradation and pollution can have an influence on their populations, emphasizing the significance of conservation efforts.' 
+    },
+    { 
+      name: 'Butterfly', 
+      description: 'Butterflies are important pollinators that help plants reproduce and preserve ecological equilibrium. Their vibrant and delicate presence adds to the aesthetic value of natural landscapes, but habitat loss and pesticide usage endanger their numbers, stressing the importance of conservation and sustainable practices.'
+    },
+    { 
+      name: 'Mango Tree', 
+      description: 'Mango trees produce tasty and healthy fruits, which benefit agriculture and local economies. Despite their economic value and the pleasure they provide via fruit production, removing trees for agriculture can result in deforestation and biodiversity loss, emphasizing the necessity of sustainable agricultural techniques.'
+    },
+    { 
+      name: 'Indoor Plant', 
+      description: 'Indoor plants increase air quality, beauty, and mental well-being by cleaning the air and connecting people to nature. Overwatering and incorrect maintenance can cause problems while improving the interior environment, stressing the significance of appropriate plant care techniques.'
+    },
+    { 
+      name: 'Outdoor Plant', 
+      description: 'Outdoor plants help to conserve biodiversity, improve soil health, and maintain ecological stability. While they add to the beauty of outdoor places, invasive species and habitat degradation may be a problem, emphasizing the necessity of native plant cultivation and conservation efforts.'
+    },
+    { 
+      name: 'Flower', 
+      description: 'Flowers serve an important role in pollination, helping many plant species reproduce. Flowers contribute delight and aesthetic value aside from their ecological role, but excessive harvesting and habitat loss can have an influence on both plant numbers and the cultural significance of flowers.'
+    },
+    { 
+      name: 'Grass', 
+      description: 'Grass is an essential component of many ecosystems, providing habitat and food for a variety of animals. While contributing to landscape stability, overgrazing and monoculture practices can result in ecological imbalances, highlighting the significance of sustainable land management.'
+    },
+    { 
+      name: 'Leaves', 
+      description: 'Photosynthesis, the process by which plants generate energy, requires leaves. Aside from their ecological importance, leaves add to the beauty of trees and plants. Deforestation and pollution, on the other hand, may have a detrimental influence on leafy ecosystems, stressing the importance of conservation efforts.'
+    },
+    { 
+      name: 'Cat', 
+      description: 'Cats are popular pets because they provide companionship as well as pest management. Despite their beneficial functions in families, outdoor cats can represent a danger to local wildlife through hunting, emphasizing the significance of ethical pet ownership and biodiversity conservation initiatives.'
+    },
+    { 
+      name: 'Dog', 
+      description: 'Dogs are well-known for their devotion and friendship, which contribute to human well-being. While they provide important assistance, poor dog waste disposal and unethical breeding methods can have negative environmental implications, emphasizing the significance of careful pet care.'
+    }
   ];
+  
 
   if (loading) {
     return (
@@ -221,7 +252,7 @@ export default function RecyclingWastes({ navigation }) {
           key={index}
           style={playButtonStyle}
           onPress={() => {
-            if (index < levelProgress[1] ) {
+            if (index < levelProgress[0] ) {
               Alert.alert(
                 'Rechallenge?',
                 'You have already completed this challenge. Would you try again?',
@@ -231,14 +262,21 @@ export default function RecyclingWastes({ navigation }) {
                     onPress: () => null,
                     style: 'cancel',
                   },
-                  {
-                    text: 'Yes',
-                    onPress: () => navigation.navigate('Camera', { object: { challengeNumber: index + 1, trash: trashes[index] }, trashes: trashes }),
-                  },
+                    {
+                      text: 'Yes',
+                      onPress: () => navigation.navigate('Camera', { 
+                        object: { 
+                          challengeNumber: index + 1, 
+                          trash: trashes[index], 
+                          description: trashes[index].description 
+                        }, 
+                        trashes: trashes 
+                      }),
+                    },
                 ]
               );
             } else if (index <= levelProgress[0]) {
-              navigation.navigate('Camera', { object: { challengeNumber: index + 1, trash: trashes[index] }, trashes: trashes });
+              navigation.navigate('Camera', { object: { challengeNumber: index + 1, trash: trashes[index], description: trashes[index].description }, trashes: trashes });
             } else {
               Alert.alert('Locked', `Finish Challenge #${index} to unlock this challenge.`);
             }

@@ -8,59 +8,54 @@ const { width, height } = Dimensions.get('window');
 
 const questions = [
   {
-    questionText: 'Which of the following materials takes the longest to decompose in a landfill?',
-    choices: ['Plastic', 'Paper', 'Glass', 'Metal'],
-    correctAnswer: 'Plastic'
+    questionText: 'Why is it important to put a plastic bottle inside the trashcan?',
+    choices: [
+      'To continue polluting our environment due to landfills.',
+      'To keep our surroundings clean and recycled properly.',
+      'To let it degrade over time.',
+      'To create more plastic bottles and be reused by production companies.'
+    ],
+    correctAnswer: 'To keep our surroundings clean and be recycled properly.'
   },
   {
-    questionText: 'What is the importance of throwing plastic bottles in trashcans?',
+    questionText: 'What items go into a biodegradable trashcan?',
     choices: [
-      'Placing plastic bottles in the trash helps to keep our environment clean and safe.',
-      'To build roads',
-      'To reduce noise pollution',
-      'To increase air pollution.'
+      'Items that can naturally break down over time, like food scraps and some paper products.',
+      'Items that can be recycled such as plastic bottles and containers.',
+      'Technology devices such as computers, mouse, keyboard, etc.',
+      'No items should be put into a biodegradable trashcan.'
     ],
-    correctAnswer: 'Placing plastic bottles in the trash helps to keep our environment clean and safe.'
+    correctAnswer: 'Items that can naturally break down over time, like food scraps and some paper products.'
   },
   {
-    questionText: 'In what ways can you save up water from the faucet?',
+    questionText: 'What can you do with unused boxes?',
     choices: [
-      'By leaving the faucet running continuously.',
-      'By using water excessively and ignoring any leaks.',
-      'By carefully using it and properly closing it after usage.',
-      'By keeping the faucet open when not in use.'
+      'To be used as fire starters when burning fallen leaves or dead plants.',
+      'To be used as traps for mice.',
+      'You can reuse unused boxes for storage, crafts, or even play.',
+      'To be hidden away and not be used again.'
     ],
-    correctAnswer: 'By carefully using it and properly closing it after usage.'
+    correctAnswer: 'You can reuse unused boxes for storage, crafts, or even play.'
   },
   {
-    questionText: 'Why is it good to plant trees in our neighborhood?',
+    questionText: 'Why is it good to use a reusable bag instead of a plastic bag?',
     choices: [
-      'Planting trees increases air pollution and worsens air quality.',
-      'Trees have no impact on preventing floods or improving air quality.',
-      'Planting trees in the neighborhood leads to a decrease in overall greenery and aesthetics.',
-      'Planting trees can prevent floods and makes the air cleaner'
+      'There is no good in using reusable bags instead of plastic bags.',
+      'Help reduce the need for single-use plastic bags and recycle/reuse bags for future shopping.',
+      'To collect more reusable bags whenever buying outside.',
+      'It is good as reusable bags also create more profit.'
     ],
-    correctAnswer: 'Planting trees can prevent floods and makes the air cleaner'
+    correctAnswer: 'Help reduce the need for single-use plastic bags and recycle/reuse bags for future shopping.'
   },
   {
-    questionText: 'How can you save energy at home?',
+    questionText: 'What is the simplest way to reduce waste at home?',
     choices: [
-      'Turn on the lights for 24hrs',
-      'Replace the light bulb',
-      'By closing the lights or other electronics that are not being used.',
-      'Play with the light switch'
+      'To throw every waste away without segregating.',
+      'Recycle materials even if they are not recyclable.',
+      'Dump waste outside the house.',
+      'Recycle materials such as paper, cardboard, and plastics.'
     ],
-    correctAnswer: 'By closing the lights or other electronics that are not being used.'
-  },
-  {
-    questionText: 'What are the benefits of reducing plastic waste?',
-    choices: [
-      'Increasing plastic waste helps in better resource utilization and recycling efficiency.',
-      'I keep our planet cleaner, save resources and reduce the problems in recycling',
-      'Plastic waste has no impact on the cleanliness of the planet or resource conservation.',
-      'Disposing of more plastic waste enhances the recycling process and reduces environmental issues.'
-    ],
-    correctAnswer: 'I keep our planet cleaner, save resources and reduce the problems in recycling'
+    correctAnswer: 'Recycle materials such as paper, cardboard, and plastics.'
   }
 ];
 
@@ -140,7 +135,7 @@ export default function QuizScreen({ navigation }) {
                     onPress: () => console.log("Cancel Pressed"),
                     style: "cancel"
                   },
-                  { text: "Yes", onPress: () => navigation.navigate('Land Pollution') }
+                  { text: "Yes", onPress: () => navigation.navigate('Pollution') }
                 ],
                 { cancelable: false }
               );
@@ -155,7 +150,7 @@ export default function QuizScreen({ navigation }) {
         </View>
       </View>
 
-      <Text style={styles.labelText}>Quiz: Pollution</Text>
+      <Text style={styles.labelText}>Quiz: Recycling</Text>
 
         <TouchableOpacity style={styles.playButton} onPress={() => null }>
           <Text style={styles.playButtonText2}>{currentQuestion.questionText}</Text>

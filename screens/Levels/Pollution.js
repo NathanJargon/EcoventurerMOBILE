@@ -69,17 +69,58 @@ export default function Pollution({ navigation }) {
   };
 
   const trashes = [
-    { name: 'Plastic', level: 1 },
-    { name: 'Glass', level: 2 },
-    { name: 'Metal', level: 3 },
-    { name: 'Paper', level: 4 },
-    { name: 'Cardboard', level: 5 },
-    { name: 'Textile', level: 6 },
-    { name: 'Rubber', level: 7 },
-    { name: 'Leather', level: 8 },
-    { name: 'Wood', level: 9 },
-    { name: 'Electronics', level: 10 },
+    { 
+        name: 'Plastic Bottles inside the Trashcan', 
+        level: 1, 
+        description: 'Plastic bottles inside the trashcan is one of the best practices to do because it saves the environment overall and reduces the chances of pollution and floods.' 
+    },
+    { 
+        name: 'Trashcan', 
+        level: 2, 
+        description: 'A trashcan is one of the main components in collecting trash. This helps the environment to collect trash in a specific container.' 
+    },
+    { 
+        name: 'AA Battery', 
+        level: 3, 
+        description: 'Double A batteries help us power small electronics, but pose a big problem in the environment if not disposed properly. Electronic batteries, such as Double A batteries, must be safely disposed through e-waste bins in your local community or businesses that accept e-waste.' 
+    },
+    { 
+        name: 'Phone Charging Cables', 
+        level: 4, 
+        description: 'Phone charging cables provide power to our electronic gadgets that we use every day. Almost every electronic manufacturer provides these cables to its users, which doubles the number of cables being used, especially if the user already has the specific type of cable needed. Due to this, some cables end up being unused or of poor quality. Cables must be disposed properly through e-waste trash bins that can be found in your local community or businesses that accept e-waste to be recycled.' 
+    },
+    { 
+        name: 'Unused Cardboard Boxes', 
+        level: 5, 
+        description: 'Cardboard boxes are the most general biodegradable containers used to pack items such as televisions, online orders, shoes, and many more. Usually, once the items are unboxed, the cardboard boxes are kept in storage without any purpose. To better utilize these biodegradable boxes, they can be used as storage boxes for other items or be recycled to recycling facilities to be turned into boxes once again.' 
+    },
+    { 
+        name: 'Reusable Bag', 
+        level: 6, 
+        description: 'Reusable bags help eliminate the use of paper and plastic bags usually used in stores (supermarkets and department stores). Reusable bags are more durable than traditional paper and plastic bags and help save more money, resources, and lessen carbon footprint.' 
+    },
+    { 
+        name: 'Aluminum Can', 
+        level: 7, 
+        description: 'Aluminum cans are generally used for beverages and food to keep freshness and protect against spoilage. They help keep products to have a long storage shelf life. Aluminum cans are the most used for food and beverage products as they are lightweight and can be easily recycled once again, allowing for less carbon production than other kinds of metals.' 
+    },
+    { 
+        name: 'Tumbler', 
+        level: 8, 
+        description: 'A tumbler is a type of beverage container that can contain liquids such as water or carbonated drinks. Tumblers are generally made out of stainless steel, which is durable and can be reused as many times as long as they are kept and cleaned properly. Tumblers also eliminate the use of plastic bottles and aluminum cans.' 
+    },
+    { 
+        name: 'Newspaper', 
+        level: 9, 
+        description: 'Newspapers are generally printed every single day, providing daily news to readers who still prefer print media. Newspapers are made out of woods of trees. They can be repurposed to be used as cleaning for windows, cat litter, origami, or be recycled to recycling facilities that will reuse these papers into new ones.' 
+    },
+    { 
+        name: 'Food Container', 
+        level: 10, 
+        description: 'Food containers are one of the most widely used plastic items in the household. These containers can also contain other items other than food such as packets of coffee, sugar, hardware nails, and others. Food containers generally last for a long time as long as they are cleaned properly. This eliminates the use of disposable food containers that harm the environment as they always end up in landfills.' 
+    }
   ];
+
 
   if (loading) {
     return (
@@ -194,14 +235,21 @@ export default function Pollution({ navigation }) {
                     onPress: () => null,
                     style: 'cancel',
                   },
-                  {
-                    text: 'Yes',
-                    onPress: () => navigation.navigate('Camera', { object: { challengeNumber: index + 1, trash: trashes[index] } }),
-                  },
+                    {
+                      text: 'Yes',
+                      onPress: () => navigation.navigate('Camera', { 
+                        object: { 
+                          challengeNumber: index + 1, 
+                          trash: trashes[index], 
+                          description: trashes[index].description 
+                        }, 
+                        trashes: trashes 
+                      }),
+                    },
                 ]
               );
             } else if (index <= levelProgress[0]) {
-              navigation.navigate('Camera', { object: { challengeNumber: index + 1, trash: trashes[index] } });
+              navigation.navigate('Camera', { object: { challengeNumber: index + 1, trash: trashes[index], description: trashes[index].description }, trashes: trashes });
             } else {
               Alert.alert('Locked', `Finish Challenge #${index} to unlock this challenge.`);
             }

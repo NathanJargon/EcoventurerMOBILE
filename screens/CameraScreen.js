@@ -9,7 +9,7 @@ const { width, height } = Dimensions.get('window');
 
 export default function CameraScreen({ route, navigation }) {
   const { object, trashes } = route.params;
-  const { challengeNumber, trash } = object;
+  const { challengeNumber, trash, description } = object;
   const { name, level } = trash;
   const [isCorrect, setIsCorrect] = useState(null);
   const [image, setImage] = useState(null);
@@ -71,8 +71,7 @@ export default function CameraScreen({ route, navigation }) {
 
       let formData = new FormData();
       formData.append('image_url', imageUrl);
-      formData.append('candidate_labels', 'paper,plastic,glass,metal,cardboard,compost,landfill,wood,textile,rubber,ceramic,leather,concrete,food,electronics');
-
+      formData.append('candidate_labels', 'Plastic Bottles,Trash,Dirty Water,Car Exhaust,Unused Tires,Motorcycle Emission,Used Facemask,Straws and Utensils,Plastic Bags,Unused Appliances,Bird,Butterfly,Mango Tree,Indoor Plant,Outdoor Plant,Flower,Grass,Leaves,Cat,Dog,Plastic Bottles inside the Trashcan,Trashcan,AA Battery,Phone Charging Cables,Unused Cardboard Boxes,Reusable Bag,Aluminum Can,Tumbler,Newspaper,Food Container');
       console.log("Sending POST request to server");
 
       const image = `data:image/jpg;base64,${result.assets[0].base64}`;
@@ -173,8 +172,7 @@ export default function CameraScreen({ route, navigation }) {
 
       let formData = new FormData();
       formData.append('image_url', imageUrl);
-      formData.append('candidate_labels', 'paper,plastic,glass,metal,cardboard,compost,landfill,wood,textile,rubber,ceramic,leather,concrete,food,electronics');
-
+      formData.append('candidate_labels', 'Plastic Bottles,Trash,Dirty Water,Car Exhaust,Unused Tires,Motorcycle Emission,Used Facemask,Straws and Utensils,Plastic Bags,Unused Appliances,Bird,Butterfly,Mango Tree,Indoor Plant,Outdoor Plant,Flower,Grass,Leaves,Cat,Dog,Plastic Bottles inside the Trashcan,Trashcan,AA Battery,Phone Charging Cables,Unused Cardboard Boxes,Reusable Bag,Aluminum Can,Tumbler,Newspaper,Food Container');
       console.log("Sending POST request to server");
 
       const image = `data:image/jpg;base64,${result.assets[0].base64}`;
@@ -430,7 +428,7 @@ export default function CameraScreen({ route, navigation }) {
           ) : isCorrect ? (
             <>
               <TouchableOpacity style={[styles.button1, { height: '70%', } ]} onPress= { null }>
-                <Text style={styles.buttonText}></Text>
+                <Text style={styles.buttonText}>{route.params.object.description}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[ styles.button2, { height: '15%', } ]} 

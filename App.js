@@ -14,12 +14,15 @@ import SettingsScreen from './screens/SettingsScreen';
 import GameScreen from './screens/GameScreen';
 import Minigame from './screens/Minigame/Minigame';
 import LandPollution from './screens/Levels/LandPollution';
+import Pollution from './screens/Levels/Pollution';
+import RecyclingWastes from './screens/Levels/RecyclingWastes';
 import LeaderboardScreen from './screens/LeaderboardsScreen';
 import DiaryScreen from './screens/DiaryScreen';
 import EditScreen from './screens/EditScreen';
 import QuizScreen from './screens/Quizzes/QuizScreen';
 import UserScreen from './screens/UserScreen';
-import RecyclingWastes from './screens/Levels/RecyclingWastes';
+import QuizScreen1 from './screens/Quizzes/QuizScreen1';
+import QuizScreen2 from './screens/Quizzes/QuizScreen2';
 
 const Stack = createStackNavigator();
 
@@ -110,6 +113,21 @@ export default function App() {
         <Stack.Screen
           name="Minigame"
           component={Minigame}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Quiz1"
+          component={QuizScreen1}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Quiz2"
+          component={QuizScreen2}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Pollution"
+          component={Pollution}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
