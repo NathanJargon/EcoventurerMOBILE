@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Animated, Modal, StyleSheet, Text, Button, Image, View, Platform, Dimensions, TouchableOpacity } from 'react-native';
+import { Alert, Animated, Modal, StyleSheet, Text, Button, Image, View, Platform, Dimensions, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { firebase } from './FirebaseConfig';
@@ -37,7 +37,29 @@ export default function CameraScreen({ route, navigation }) {
     AsyncStorage.setItem('currentChallenge', currentChallenge.toString());
   }, [currentChallenge]);
 
-  
+  useEffect(() => {
+    const fetchDiary = async () => {
+      const user = firebase.auth().currentUser;
+      if (user) {
+        console.log('User is logged in:', user); // Log the current user
+        const docRef = firebase.firestore().collection('users').doc(user.email);
+        const doc = await docRef.get();
+        if (doc.exists) {
+          console.log('Document exists:', doc.data()); // Log the document data
+          const diary = doc.data().diary || [];
+          console.log('Fetched diary from Firebase:', diary); // Log the fetched diary
+          setUserDiary(diary);
+        } else {
+          console.log('Document does not exist'); // Log if the document does not exist
+        }
+      } else {
+        console.log('No user is logged in'); // Log if no user is logged in
+      }
+    };
+
+    fetchDiary();
+  }, []);
+
   const takePhotoLocal = async () => {
     console.log("Starting takePhotoLocal function");
     let result = await ImagePicker.launchCameraAsync({
@@ -88,9 +110,53 @@ export default function CameraScreen({ route, navigation }) {
         }
       })
       .then(function(response) {
+        const user = firebase.auth().currentUser;
         console.log("API call was successful. Response data:", response.data);
+        const docRef = firebase.firestore().collection('users').doc(user.email);
+
+        const existingEntryIndex = userDiary.findIndex(entry => entry.correctAnswer === currentName);
+        console.log('existingEntryIndex:', existingEntryIndex); // Check if existingEntryIndex is calculated correctly
       
-        setUserDiary([...userDiary, { imageUrl, correctAnswer: currentName }]);
+        console.log('currentName:', currentName); // Check if currentName has the expected value
+        console.log('imageUrl:', imageUrl); // Check if imageUrl has the expected value
+      
+        if (existingEntryIndex !== -1) {
+          Alert.alert(
+            "Replace existing entry?",
+            "An entry for this item already exists in your diary. Do you want to replace it with the new image?",
+            [
+              {
+                text: "Cancel",
+                onPress: () => console.log("Cancel Pressed"),
+                style: "cancel"
+              },
+              {
+                text: "OK",
+                onPress: () => {
+                  docRef.update({
+                    diary: firebase.firestore.FieldValue.arrayRemove(userDiary[existingEntryIndex])
+                  }).then(() => {
+                    const newUserDiary = [...userDiary];
+                    newUserDiary[existingEntryIndex] = { imageUrl, correctAnswer: currentName };
+                    setUserDiary(newUserDiary);
+                    AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
+                    docRef.update({
+                      diary: firebase.firestore.FieldValue.arrayUnion(newUserDiary[existingEntryIndex])
+                    });
+                  });
+                }
+              }
+            ],
+            { cancelable: false }
+          );
+        } else {
+          const newUserDiary = [...userDiary, { imageUrl, correctAnswer: currentName }];
+          setUserDiary(newUserDiary);
+          AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
+          docRef.update({
+            diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: currentName })
+          });
+        }
       
         if (response.data.labels) {
           const labels = response.data.labels.replace(/[()]/g, '').split(', ').map(label => label.replace(/['"]/g, ''));
@@ -190,8 +256,52 @@ export default function CameraScreen({ route, navigation }) {
       })
       .then(function(response) {
         console.log("API call was successful. Response data:", response.data);
+        const user = firebase.auth().currentUser;
+        const docRef = firebase.firestore().collection('users').doc(user.email);
+
+        const existingEntryIndex = userDiary.findIndex(entry => entry.correctAnswer === currentName);
+        console.log('existingEntryIndex:', existingEntryIndex); // Check if existingEntryIndex is calculated correctly
       
-        setUserDiary([...userDiary, { imageUrl, correctAnswer: currentName }]);
+        console.log('currentName:', currentName); // Check if currentName has the expected value
+        console.log('imageUrl:', imageUrl); // Check if imageUrl has the expected value
+      
+        if (existingEntryIndex !== -1) {
+          Alert.alert(
+            "Replace existing entry?",
+            "An entry for this item already exists in your diary. Do you want to replace it with the new image?",
+            [
+              {
+                text: "Cancel",
+                onPress: () => console.log("Cancel Pressed"),
+                style: "cancel"
+              },
+              {
+                text: "OK",
+                onPress: () => {
+                  docRef.update({
+                    diary: firebase.firestore.FieldValue.arrayRemove(userDiary[existingEntryIndex])
+                  }).then(() => {
+                    const newUserDiary = [...userDiary];
+                    newUserDiary[existingEntryIndex] = { imageUrl, correctAnswer: currentName };
+                    setUserDiary(newUserDiary);
+                    AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
+                    docRef.update({
+                      diary: firebase.firestore.FieldValue.arrayUnion(newUserDiary[existingEntryIndex])
+                    });
+                  });
+                }
+              }
+            ],
+            { cancelable: false }
+          );
+        } else {
+          const newUserDiary = [...userDiary, { imageUrl, correctAnswer: currentName }];
+          setUserDiary(newUserDiary);
+          AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
+          docRef.update({
+            diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: currentName })
+          });
+        }
       
         if (response.data.labels) {
           const labels = response.data.labels.replace(/[()]/g, '').split(', ').map(label => label.replace(/['"]/g, ''));
@@ -262,35 +372,7 @@ export default function CameraScreen({ route, navigation }) {
                 currentChallenge: newChallenge
               };
               
-              const existingEntry = userData.diary.find(entry => entry.correctAnswer === currentName);
-              if (existingEntry) {
-                Alert.alert(
-                  "Replace Image",
-                  "This trash already exists in your diary. Do you want to replace the image?",
-                  [
-                    {
-                      text: "Cancel",
-                      style: "cancel"
-                    },
-                    { 
-                      text: "OK", 
-                      onPress: () => {
-                        updateObject['diary'] = userData.diary.map(entry => 
-                          entry.correctAnswer === currentName 
-                            ? { ...entry, imageUrl: userDiary[userDiary.length - 1].imageUrl } 
-                            : entry
-                        );
-                        userRef.update(updateObject);
-                      } 
-                    }
-                  ]
-                );
-              } else {
-                userDiary.forEach(entry => {
-                  updateObject['diary'] = firebase.firestore.FieldValue.arrayUnion({ imageUrl: entry.imageUrl, correctAnswer: entry.correctAnswer });
-                });
-                userRef.update(updateObject);
-              }
+              userRef.update(updateObject);
               setHasUpdatedChallenge(true);
             } else {
               console.log("No such document!");
@@ -301,7 +383,7 @@ export default function CameraScreen({ route, navigation }) {
         });
       }
     }
-  }, [isCorrect, userDiary, currentChallenge]);
+  }, [isCorrect, currentChallenge]);
 
   useEffect(() => {
     if (isCorrect === false) {
@@ -428,7 +510,7 @@ export default function CameraScreen({ route, navigation }) {
           ) : isCorrect ? (
             <>
               <TouchableOpacity style={[styles.button1, { height: '70%', } ]} onPress= { null }>
-                <Text style={styles.buttonText}>{route.params.object.description}</Text>
+                <Text style={styles.descriptionText}>{route.params.object.description}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[ styles.button2, { height: '15%', } ]} 
@@ -615,6 +697,11 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: width * 0.05,
+    fontWeight: 'bold',
+  },
+  descriptionText: {
+    color: '#fff',
+    fontSize: width * 0.03,
     fontWeight: 'bold',
   },
 });

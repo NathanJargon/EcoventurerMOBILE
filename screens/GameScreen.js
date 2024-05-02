@@ -11,7 +11,13 @@ export default function GameScreen({ navigation }) {
   const [levelProgress, setLevelProgress] = useState([]);
   const [currentChallenge, setCurrentChallenge] = useState(0);
   const [loading, setLoading] = useState(true); 
-  const levelNames = ['Air, Water, and Land Pollution', 'Animals and Plants', 'Recycling Wastes'];
+  const levelToScreenMapping = {
+    'Air, Water, and Land Pollution': 'Land Pollution',
+    'Animals and Plants': 'Pollution',
+    'Recycling Wastes': 'RecyclingWastes',
+  };
+  const levelNames = Object.keys(levelToScreenMapping);
+
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -111,7 +117,7 @@ export default function GameScreen({ navigation }) {
             onPress={() => {
               if (index <= levelUnlocked) {
                 // navigate to the game
-                navigation.navigate(levelNames[index]);
+                navigation.navigate(levelToScreenMapping[levelNames[index]]);
                 // when the game is finished, call saveProgress(index, newProgress)
               } else {
                 Alert.alert('Locked', `Finish Set ${index} to unlock this set.`);
