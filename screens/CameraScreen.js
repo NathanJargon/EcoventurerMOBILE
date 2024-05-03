@@ -130,9 +130,17 @@ export default function CameraScreen({ route, navigation }) {
                 onPress: () => console.log("Cancel Pressed"),
                 style: "cancel"
               },
-              {
-                text: "OK",
-                onPress: () => {
+              {   
+              text: "OK",
+              onPress: () => {
+                // Get the reference to the existing image
+                const existingImageRef = firebase.storage().refFromURL(userDiary[existingEntryIndex].imageUrl);
+
+                // Delete the existing image
+                existingImageRef.delete().then(() => {
+                  console.log("Existing image deleted from Firebase Storage");
+
+                  // Update the Firestore document
                   docRef.update({
                     diary: firebase.firestore.FieldValue.arrayRemove(userDiary[existingEntryIndex])
                   }).then(() => {
@@ -144,8 +152,11 @@ export default function CameraScreen({ route, navigation }) {
                       diary: firebase.firestore.FieldValue.arrayUnion(newUserDiary[existingEntryIndex])
                     });
                   });
-                }
+                }).catch((error) => {
+                  console.error("Error deleting existing image from Firebase Storage:", error);
+                });
               }
+            }
             ],
             { cancelable: false }
           );
@@ -278,16 +289,27 @@ export default function CameraScreen({ route, navigation }) {
               {
                 text: "OK",
                 onPress: () => {
-                  docRef.update({
-                    diary: firebase.firestore.FieldValue.arrayRemove(userDiary[existingEntryIndex])
-                  }).then(() => {
-                    const newUserDiary = [...userDiary];
-                    newUserDiary[existingEntryIndex] = { imageUrl, correctAnswer: currentName };
-                    setUserDiary(newUserDiary);
-                    AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
+                  // Get the reference to the existing image
+                  const existingImageRef = firebase.storage().refFromURL(userDiary[existingEntryIndex].imageUrl);
+
+                  // Delete the existing image
+                  existingImageRef.delete().then(() => {
+                    console.log("Existing image deleted from Firebase Storage");
+
+                    // Update the Firestore document
                     docRef.update({
-                      diary: firebase.firestore.FieldValue.arrayUnion(newUserDiary[existingEntryIndex])
+                      diary: firebase.firestore.FieldValue.arrayRemove(userDiary[existingEntryIndex])
+                    }).then(() => {
+                      const newUserDiary = [...userDiary];
+                      newUserDiary[existingEntryIndex] = { imageUrl, correctAnswer: currentName };
+                      setUserDiary(newUserDiary);
+                      AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
+                      docRef.update({
+                        diary: firebase.firestore.FieldValue.arrayUnion(newUserDiary[existingEntryIndex])
+                      });
                     });
+                  }).catch((error) => {
+                    console.error("Error deleting existing image from Firebase Storage:", error);
                   });
                 }
               }
