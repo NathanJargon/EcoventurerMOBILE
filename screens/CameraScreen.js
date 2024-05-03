@@ -120,7 +120,7 @@ export default function CameraScreen({ route, navigation }) {
         console.log('currentName:', currentName); // Check if currentName has the expected value
         console.log('imageUrl:', imageUrl); // Check if imageUrl has the expected value
       
-        if (existingEntryIndex !== -1) {
+        if (existingEntryIndex !== -1 && predictions.map(p => p.toLowerCase()).includes(currentName.toLowerCase())) {
           Alert.alert(
             "Replace existing entry?",
             "An entry for this item already exists in your diary. Do you want to replace it with the new image?",
@@ -276,7 +276,7 @@ export default function CameraScreen({ route, navigation }) {
         console.log('currentName:', currentName); // Check if currentName has the expected value
         console.log('imageUrl:', imageUrl); // Check if imageUrl has the expected value
       
-        if (existingEntryIndex !== -1) {
+        if (existingEntryIndex !== -1 && predictions.map(p => p.toLowerCase()).includes(currentName.toLowerCase())) {
           Alert.alert(
             "Replace existing entry?",
             "An entry for this item already exists in your diary. Do you want to replace it with the new image?",
