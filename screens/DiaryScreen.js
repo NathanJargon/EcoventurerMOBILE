@@ -66,6 +66,7 @@ export default function DiaryScreen({ navigation }) {
         id: user.id,
         neededPoints: user.neededPoints,
         email: user.email, 
+        purchasedItems: user.purchasedItems, 
       }))
   );
   const currentUser = users.find(user => user.email === currentUserEmail);
@@ -102,6 +103,7 @@ export default function DiaryScreen({ navigation }) {
             numColumns={2}
             keyExtractor={item => `${item.id}-${item.index}`}
             renderItem={({ item }) => (
+              console.log(item.purchasedItems),
               item.imageUri !== '' && (
                 <View style={styles.box}>
                   <View style={styles.imageContainer}>
@@ -109,7 +111,16 @@ export default function DiaryScreen({ navigation }) {
                       source={{ uri: item.imageUri }} 
                       style={styles.boxImage}
                     />
-                    <Image source={{ uri: currentBorder ? currentBorder.imageUri : '' }} style={styles.borderImage} />
+                  {item.purchasedItems && item.purchasedItems
+                    .filter(purchasedItem => !purchasedItem.id.startsWith('banner'))
+                    .map(purchasedItem => 
+                      purchasedItem.imageUri !== '' && (
+                        <Image 
+                          source={{ uri: purchasedItem.imageUri }} 
+                          style={styles.borderImage} 
+                        />
+                      )
+                  )}
                   </View>
                   <TouchableOpacity 
                     style={styles.button} 

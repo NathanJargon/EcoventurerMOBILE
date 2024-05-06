@@ -61,7 +61,7 @@ export default function HomeScreen({ navigation }) {
       <TouchableOpacity style={styles.smallButton} onPress={() => navigation.navigate('Settings')}>
         <Text style={styles.smallButtonText}>Account Settings</Text>
       </TouchableOpacity>
-      <Text style={styles.versionText}>Version 1.7.2</Text>
+      <Text style={styles.versionText}>Version 1.7.2 — N.J.</Text>
     </View>
   );
 }

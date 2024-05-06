@@ -120,6 +120,8 @@ export default function CameraScreen({ route, navigation }) {
         console.log('currentName:', currentName); // Check if currentName has the expected value
         console.log('imageUrl:', imageUrl); // Check if imageUrl has the expected value
       
+        let newUserDiary = [...userDiary];
+
         if (existingEntryIndex !== -1 && predictions.map(p => p.toLowerCase()).includes(currentName.toLowerCase())) {
           Alert.alert(
             "Replace existing entry?",
@@ -146,11 +148,6 @@ export default function CameraScreen({ route, navigation }) {
                   }).then(() => {
                     const newUserDiary = [...userDiary];
                     newUserDiary[existingEntryIndex] = { imageUrl, correctAnswer: currentName };
-                    setUserDiary(newUserDiary);
-                    AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
-                    docRef.update({
-                      diary: firebase.firestore.FieldValue.arrayUnion(newUserDiary[existingEntryIndex])
-                    });
                   });
                 }).catch((error) => {
                   console.error("Error deleting existing image from Firebase Storage:", error);
@@ -162,11 +159,7 @@ export default function CameraScreen({ route, navigation }) {
           );
         } else {
           const newUserDiary = [...userDiary, { imageUrl, correctAnswer: currentName }];
-          setUserDiary(newUserDiary);
-          AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
-          docRef.update({
-            diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: currentName })
-          });
+
         }
       
         if (response.data.labels) {
@@ -179,23 +172,30 @@ export default function CameraScreen({ route, navigation }) {
 
           console.log('Predictions:', predictions); 
 
-          if (predictions.map(p => p.toLowerCase()).includes(currentName.toLowerCase())) {
-            setIsCorrect(true);
-          } else {
-            setIsCorrect(false);
-            ref.delete().then(() => {
-              console.log("Image deleted from Firebase Storage");
-          
-              ref.getDownloadURL().then(() => {
-                console.log("Error: Image still exists");
-              }).catch(() => {
-                console.log("Image successfully deleted");
-              });
-          
-            }).catch((error) => {
-              console.error("Error deleting image from Firebase Storage:", error);
+        if (predictions.map(p => p.toLowerCase()).includes(currentName.toLowerCase())) {
+          setIsCorrect(true);
+
+          setUserDiary(newUserDiary);
+          AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
+          docRef.update({
+            diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: currentName })
+          });
+        } else {
+          setIsCorrect(false);
+          ref.delete().then(() => {
+            console.log("Image deleted from Firebase Storage");
+
+            ref.getDownloadURL().then(() => {
+              console.log("Error: Image still exists");
+            }).catch(() => {
+              console.log("Image successfully deleted");
             });
-          }
+
+          }).catch((error) => {
+            console.error("Error deleting image from Firebase Storage:", error);
+          });
+        }
+
           setIsAnalyzing(false);
         } else {
           console.log('Error: labels is undefined');
@@ -275,7 +275,8 @@ export default function CameraScreen({ route, navigation }) {
       
         console.log('currentName:', currentName); // Check if currentName has the expected value
         console.log('imageUrl:', imageUrl); // Check if imageUrl has the expected value
-      
+        let newUserDiary = [...userDiary];
+
         if (existingEntryIndex !== -1 && predictions.map(p => p.toLowerCase()).includes(currentName.toLowerCase())) {
           Alert.alert(
             "Replace existing entry?",
@@ -302,11 +303,6 @@ export default function CameraScreen({ route, navigation }) {
                     }).then(() => {
                       const newUserDiary = [...userDiary];
                       newUserDiary[existingEntryIndex] = { imageUrl, correctAnswer: currentName };
-                      setUserDiary(newUserDiary);
-                      AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
-                      docRef.update({
-                        diary: firebase.firestore.FieldValue.arrayUnion(newUserDiary[existingEntryIndex])
-                      });
                     });
                   }).catch((error) => {
                     console.error("Error deleting existing image from Firebase Storage:", error);
@@ -317,13 +313,9 @@ export default function CameraScreen({ route, navigation }) {
             { cancelable: false }
           );
         } else {
-          const newUserDiary = [...userDiary, { imageUrl, correctAnswer: currentName }];
-          setUserDiary(newUserDiary);
-          AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
-          docRef.update({
-            diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: currentName })
-          });
+          newUserDiary.push({ imageUrl, correctAnswer: currentName });
         }
+
       
         if (response.data.labels) {
           const labels = response.data.labels.replace(/[()]/g, '').split(', ').map(label => label.replace(/['"]/g, ''));
@@ -335,24 +327,30 @@ export default function CameraScreen({ route, navigation }) {
 
           console.log('Predictions:', predictions); 
 
-          if (predictions.map(p => p.toLowerCase()).includes(currentName.toLowerCase())) {
-            setIsCorrect(true);
-          } else {
-            setIsCorrect(false);
-            ref.delete().then(() => {
-              console.log("Image deleted from Firebase Storage");
-          
-              // Check if the image has been deleted
-              ref.getDownloadURL().then(() => {
-                console.log("Error: Image still exists");
-              }).catch(() => {
-                console.log("Image successfully deleted");
-              });
-          
-            }).catch((error) => {
-              console.error("Error deleting image from Firebase Storage:", error);
+        if (predictions.map(p => p.toLowerCase()).includes(currentName.toLowerCase())) {
+          setIsCorrect(true);
+
+          setUserDiary(newUserDiary);
+          AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
+          docRef.update({
+            diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: currentName })
+          });
+        } else {
+          setIsCorrect(false);
+          ref.delete().then(() => {
+            console.log("Image deleted from Firebase Storage");
+
+            ref.getDownloadURL().then(() => {
+              console.log("Error: Image still exists");
+            }).catch(() => {
+              console.log("Image successfully deleted");
             });
-          }
+
+          }).catch((error) => {
+            console.error("Error deleting image from Firebase Storage:", error);
+          });
+        }
+
           setIsAnalyzing(false);
         } else {
           console.log('Error: labels is undefined');
@@ -374,6 +372,9 @@ export default function CameraScreen({ route, navigation }) {
   };
 
   useEffect(() => {
+    console.log('isCorrect:', isCorrect);
+    console.log('challengeNumber:', challengeNumber);
+    console.log('currentChallenge:', currentChallenge);
     if (isCorrect === true) {
       const user = firebase.auth().currentUser;
       if (user) {
@@ -381,31 +382,28 @@ export default function CameraScreen({ route, navigation }) {
         userRef.get().then((doc) => {
           if (doc.exists) {
             const userData = doc.data();
-            const currentChallenge = userData.currentChallenge;
             let levelProgress = Array.isArray(userData.levelProgress) ? userData.levelProgress : [0, 0, 0];
-
-            if (challengeNumber === currentChallenge) { 
-              levelProgress[0]++;
-              setLevelProgress([...levelProgress]);
-              let newChallenge = currentChallenge + 1;
-              setCurrentChallenge(newChallenge);
-              let updateObject = {
-                levelProgress: levelProgress,
-                currentChallenge: newChallenge
-              };
-              
-              userRef.update(updateObject);
-              setHasUpdatedChallenge(true);
-            } else {
-              console.log("No such document!");
-            }
+  
+            levelProgress[0]++;
+            setLevelProgress([...levelProgress]);
+            let newChallenge = currentChallenge + 1;
+            let updateObject = {
+              levelProgress: levelProgress,
+              currentChallenge: newChallenge
+            };
+  
+            userRef.update(updateObject);
+            setCurrentChallenge(newChallenge);
+            
+            userRef.update(updateObject);
+            setHasUpdatedChallenge(true);
           } 
         }).catch((error) => {
           console.log("Error getting document:", error);
         });
       }
     }
-  }, [isCorrect, currentChallenge]);
+  }, [isCorrect]); 
 
   useEffect(() => {
     if (isCorrect === false) {

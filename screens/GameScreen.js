@@ -3,6 +3,9 @@ import { Alert, ImageBackground, View, TouchableOpacity, Text, StyleSheet, Dimen
 import { TextInput } from 'react-native-paper';
 import { firebase } from './FirebaseConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import stage1 from '../assets/stage1.png';
+import stage2 from '../assets/stage2.png';
+import stage3 from '../assets/stage3.png';
 
 const { width, height } = Dimensions.get('window');
 
@@ -12,9 +15,9 @@ export default function GameScreen({ navigation }) {
   const [currentChallenge, setCurrentChallenge] = useState(0);
   const [loading, setLoading] = useState(true); 
   const levelToScreenMapping = {
-    'Air, Water, and Land Pollution': 'Land Pollution',
-    'Animals and Plants': 'Pollution',
-    'Recycling Wastes': 'RecyclingWastes',
+    'Air, Water, and Land Pollution': { screen: 'Land Pollution', image: stage1 },
+    'Animals and Plants': { screen: 'Pollution', image: stage2 },
+    'Recycling Wastes': { screen: 'RecyclingWastes', image: stage3 },
   };
   const levelNames = Object.keys(levelToScreenMapping);
 
@@ -116,15 +119,13 @@ export default function GameScreen({ navigation }) {
             style={playButtonStyle}
             onPress={() => {
               if (index <= levelUnlocked) {
-                // navigate to the game
-                navigation.navigate(levelToScreenMapping[levelNames[index]]);
-                // when the game is finished, call saveProgress(index, newProgress)
+                navigation.navigate(levelToScreenMapping[levelNames[index]].screen);
               } else {
                 Alert.alert('Locked', `Finish Set ${index} to unlock this set.`);
               }
             }}
           >
-            <Image source={require('../assets/bg1.jpg')} style={styles.boxImage} />
+            <Image source={levelToScreenMapping[levelNames[index]].image} style={styles.boxImage} />
             <View style={styles.textContainer}>
               <Text style={styles.playButtonText}>{levelNames[index]}</Text>
               {index <= levelUnlocked ? (
