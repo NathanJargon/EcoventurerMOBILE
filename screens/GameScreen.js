@@ -17,7 +17,7 @@ export default function GameScreen({ navigation }) {
   const levelToScreenMapping = {
     'Air, Water, and Land Pollution': { screen: 'Land Pollution', image: stage1 },
     'Animals and Plants': { screen: 'Pollution', image: stage2 },
-    'Recycling Wastes': { screen: 'RecyclingWastes', image: stage3 },
+    'Recycling Wastes': { screen: 'Recycling Wastes', image: stage3 },
   };
   const levelNames = Object.keys(levelToScreenMapping);
 
@@ -29,8 +29,18 @@ export default function GameScreen({ navigation }) {
         const doc = await firebase.firestore().collection('users').doc(user.email).get();
         if (doc.exists) {
           const userData = doc.data();
-          setLevelUnlocked(userData.levelUnlocked);
-          setLevelProgress(userData.levelProgress || []);
+          let unlockedLevel = userData.levelUnlocked;
+          const progress = userData.levelProgress || [];
+
+          // Check if the next set should be unlocked
+          progress.forEach((challengesCompleted, index) => {
+            if (challengesCompleted === 10 && index === unlockedLevel) {
+              unlockedLevel = index + 1; // Unlock the next set
+            }
+          });
+
+          setLevelUnlocked(unlockedLevel);
+          setLevelProgress(progress);
           setCurrentChallenge(userData.currentChallenge);
         } else {
           console.log('No such document!');
@@ -38,7 +48,7 @@ export default function GameScreen({ navigation }) {
       } else {
         console.log('No user is signed in!');
       }
-      setLoading(false); 
+      setLoading(false);
     };
     fetchUserData();
   }, []);

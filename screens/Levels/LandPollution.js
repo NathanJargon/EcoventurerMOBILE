@@ -136,7 +136,7 @@ export default function LandPollution({ navigation }) {
       description: 'Appliances improve contemporary living, yet inappropriate disposal as electronic trash contributes to pollution. Despite the convenience and efficiency benefits, addressing the environmental effect necessitates responsible e-waste management, recycling activities, and sustainable product design.'
     }
   ];
-  
+
 
   if (loading) {
     return (
