@@ -14,7 +14,111 @@ export default function RecyclingWastes({ navigation }) {
   const levelNames = ['Land Pollution', 'Recycling Wastes', 'Pollution'];
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentChallenge, setCurrentChallenge] = useState(0);
-  
+  const [trashes, setTrashes] = useState([]); 
+
+  useEffect(() => {
+    const fetchTrashes = async () => {
+      const docRef = firebase.firestore().collection('lessons').doc('Recycling Wastes');
+      const doc = await docRef.get();
+      if (doc.exists) {
+        const data = doc.data();
+        if (data.trashes) {
+          // Assuming you want to flatten the structure to an array of trashes
+          const trashesArray = Object.entries(data.trashes).reduce((acc, [level, trashes]) => {
+            // Add the level to each trash object
+            const trashesWithLevel = trashes.map(trash => ({ ...trash, level }));
+            return acc.concat(trashesWithLevel);
+          }, []);
+          setTrashes(trashesArray);
+        }
+      } else {
+        console.log("No such document!");
+      }
+    };
+
+    fetchTrashes();
+  }, []);
+
+  /*
+  const trashes = [
+    { 
+        name: 'Plastic Bottles inside the Trashcan', 
+        level: 1, 
+        description: 'Plastic bottles inside the trashcan is one of the best practices to do because it saves the environment overall and reduces the chances of pollution and floods.' 
+    },
+    { 
+        name: 'Trashcan', 
+        level: 2, 
+        description: 'A trashcan is one of the main components in collecting trash. This helps the environment to collect trash in a specific container.' 
+    },
+    { 
+        name: 'AA Battery', 
+        level: 3, 
+        description: 'Double A batteries help us power small electronics, but pose a big problem in the environment if not disposed properly. Electronic batteries, such as Double A batteries, must be safely disposed through e-waste bins in your local community or businesses that accept e-waste.' 
+    },
+    { 
+        name: 'Phone Charging Cables', 
+        level: 4, 
+        description: 'Phone charging cables provide power to our electronic gadgets that we use every day. Almost every electronic manufacturer provides these cables to its users, which doubles the number of cables being used, especially if the user already has the specific type of cable needed. Due to this, some cables end up being unused or of poor quality. Cables must be disposed properly through e-waste trash bins that can be found in your local community or businesses that accept e-waste to be recycled.' 
+    },
+    { 
+        name: 'Unused Cardboard Boxes', 
+        level: 5, 
+        description: 'Cardboard boxes are the most general biodegradable containers used to pack items such as televisions, online orders, shoes, and many more. Usually, once the items are unboxed, the cardboard boxes are kept in storage without any purpose. To better utilize these biodegradable boxes, they can be used as storage boxes for other items or be recycled to recycling facilities to be turned into boxes once again.' 
+    },
+    { 
+        name: 'Reusable Bag', 
+        level: 6, 
+        description: 'Reusable bags help eliminate the use of paper and plastic bags usually used in stores (supermarkets and department stores). Reusable bags are more durable than traditional paper and plastic bags and help save more money, resources, and lessen carbon footprint.' 
+    },
+    { 
+        name: 'Aluminum Can', 
+        level: 7, 
+        description: 'Aluminum cans are generally used for beverages and food to keep freshness and protect against spoilage. They help keep products to have a long storage shelf life. Aluminum cans are the most used for food and beverage products as they are lightweight and can be easily recycled once again, allowing for less carbon production than other kinds of metals.' 
+    },
+    { 
+        name: 'Tumbler', 
+        level: 8, 
+        description: 'A tumbler is a type of beverage container that can contain liquids such as water or carbonated drinks. Tumblers are generally made out of stainless steel, which is durable and can be reused as many times as long as they are kept and cleaned properly. Tumblers also eliminate the use of plastic bottles and aluminum cans.' 
+    },
+    { 
+        name: 'Newspaper', 
+        level: 9, 
+        description: 'Newspapers are generally printed every single day, providing daily news to readers who still prefer print media. Newspapers are made out of woods of trees. They can be repurposed to be used as cleaning for windows, cat litter, origami, or be recycled to recycling facilities that will reuse these papers into new ones.' 
+    },
+    { 
+        name: 'Food Container', 
+        level: 10, 
+        description: 'Food containers are one of the most widely used plastic items in the household. These containers can also contain other items other than food such as packets of coffee, sugar, hardware nails, and others. Food containers generally last for a long time as long as they are cleaned properly. This eliminates the use of disposable food containers that harm the environment as they always end up in landfills.' 
+    }
+  ];
+
+
+  useEffect(() => {
+    const sendTrashesToFirebase = async () => {
+      const lessonsRef = firebase.firestore().collection('lessons').doc('Recycling Wastes');
+      
+      // Transforming trashes array to a map with level as key and array of {name, description} as value
+      const trashesMap = trashes.reduce((acc, {level, name, description}) => {
+        if (!acc[level]) {
+          acc[level] = [];
+        }
+        acc[level].push({name, description});
+        return acc;
+      }, {});
+
+      try {
+        await lessonsRef.set({ trashes: trashesMap }, { merge: true });
+        console.log('Trashes data sent successfully');
+      } catch (error) {
+        console.error('Error sending trashes data:', error);
+      }
+    };
+
+    sendTrashesToFirebase();
+  }, []);
+  */
+
   useFocusEffect(
     React.useCallback(() => {
       const fetchUserData = async () => {
@@ -82,49 +186,6 @@ export default function RecyclingWastes({ navigation }) {
     }
   };
 
-  const trashes = [
-    { 
-      name: 'Bird', 
-      description: 'Birds play an important role in ecosystems by pollinating plants, controlling pests, and preserving biodiversity. While their existence enhances the beauty of nature, habitat degradation and pollution can have an influence on their populations, emphasizing the significance of conservation efforts.' 
-    },
-    { 
-      name: 'Butterfly', 
-      description: 'Butterflies are important pollinators that help plants reproduce and preserve ecological equilibrium. Their vibrant and delicate presence adds to the aesthetic value of natural landscapes, but habitat loss and pesticide usage endanger their numbers, stressing the importance of conservation and sustainable practices.'
-    },
-    { 
-      name: 'Mango Tree', 
-      description: 'Mango trees produce tasty and healthy fruits, which benefit agriculture and local economies. Despite their economic value and the pleasure they provide via fruit production, removing trees for agriculture can result in deforestation and biodiversity loss, emphasizing the necessity of sustainable agricultural techniques.'
-    },
-    { 
-      name: 'Indoor Plant', 
-      description: 'Indoor plants increase air quality, beauty, and mental well-being by cleaning the air and connecting people to nature. Overwatering and incorrect maintenance can cause problems while improving the interior environment, stressing the significance of appropriate plant care techniques.'
-    },
-    { 
-      name: 'Outdoor Plant', 
-      description: 'Outdoor plants help to conserve biodiversity, improve soil health, and maintain ecological stability. While they add to the beauty of outdoor places, invasive species and habitat degradation may be a problem, emphasizing the necessity of native plant cultivation and conservation efforts.'
-    },
-    { 
-      name: 'Flower', 
-      description: 'Flowers serve an important role in pollination, helping many plant species reproduce. Flowers contribute delight and aesthetic value aside from their ecological role, but excessive harvesting and habitat loss can have an influence on both plant numbers and the cultural significance of flowers.'
-    },
-    { 
-      name: 'Grass', 
-      description: 'Grass is an essential component of many ecosystems, providing habitat and food for a variety of animals. While contributing to landscape stability, overgrazing and monoculture practices can result in ecological imbalances, highlighting the significance of sustainable land management.'
-    },
-    { 
-      name: 'Leaves', 
-      description: 'Photosynthesis, the process by which plants generate energy, requires leaves. Aside from their ecological importance, leaves add to the beauty of trees and plants. Deforestation and pollution, on the other hand, may have a detrimental influence on leafy ecosystems, stressing the importance of conservation efforts.'
-    },
-    { 
-      name: 'Cat', 
-      description: 'Cats are popular pets because they provide companionship as well as pest management. Despite their beneficial functions in families, outdoor cats can represent a danger to local wildlife through hunting, emphasizing the significance of ethical pet ownership and biodiversity conservation initiatives.'
-    },
-    { 
-      name: 'Dog', 
-      description: 'Dogs are well-known for their devotion and friendship, which contribute to human well-being. While they provide important assistance, poor dog waste disposal and unethical breeding methods can have negative environmental implications, emphasizing the significance of careful pet care.'
-    }
-  ];
-  
 
   if (loading) {
     return (
@@ -158,7 +219,7 @@ export default function RecyclingWastes({ navigation }) {
                 <TouchableOpacity
                   style={styles.buttonYes}
                   onPress={() => {
-                    navigation.navigate('Quiz');
+                    navigation.navigate('Quiz2');
                     setIsModalVisible(false);
                   }}
                 >
@@ -192,6 +253,7 @@ export default function RecyclingWastes({ navigation }) {
             </TouchableOpacity>
             <Text style={styles.headerText}>Go Back</Text>
           </View>
+
           <View style={{ alignItems: 'center', justifyContent: 'center' }}>
           <TouchableOpacity 
             onPress={levelProgress[1] >= 10 ? handleButtonClick : null} 

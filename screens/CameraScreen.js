@@ -61,6 +61,217 @@ export default function CameraScreen({ route, navigation }) {
   }, []);
 
   const takePhotoLocal = async () => {
+    console.log("Starting takePhoto function");
+    let result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.5,
+      base64: true,
+    });
+  
+    console.log("ImagePicker result:", result);
+  
+    if (!result.cancelled && result.assets[0].uri) {
+      const image = `data:image/jpg;base64,${result.assets[0].base64}`;
+  
+      axios({
+        method: "POST",
+        url: "https://detect.roboflow.com/waste-classification-uwqfy/1",
+        params: {
+          api_key: "3QdxSGtdKAUtfOwAjkC4"
+        },
+        data: image,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      })
+      .then(async function(response) {
+        console.log(response.data);
+        setApiResult(response.data);
+  
+        // Get the predicted class from the response
+        const predictedClass = response.data.predictions[0].class;
+  
+        // Compare the predicted class to the name variable
+        if (predictedClass === name) {
+          setIsCorrect(true);
+        } else {
+          setIsCorrect(false);
+        }
+  
+        // Handle Firebase storage and Firestore operations
+        const user = firebase.auth().currentUser;
+        const docRef = firebase.firestore().collection('users').doc(user.email);
+  
+        // Check if the entry already exists in userDiary
+        const existingEntryIndex = userDiary.findIndex(entry => entry.correctAnswer === name);
+  
+        if (existingEntryIndex !== -1) {
+          // Confirm replacement of the existing entry
+          Alert.alert(
+            "Replace existing entry?",
+            "An entry for this item already exists in your diary. Do you want to replace it with the new image?",
+            [
+              {
+                text: "Cancel",
+                onPress: () => console.log("Cancel Pressed"),
+                style: "cancel"
+              },
+              {
+                text: "OK",
+                onPress: async () => {
+                  // Get the reference to the existing image
+                  const existingImageRef = firebase.storage().refFromURL(userDiary[existingEntryIndex].imageUrl);
+  
+                  // Delete the existing image
+                  await existingImageRef.delete();
+  
+                  // Update the Firestore document
+                  await docRef.update({
+                    diary: firebase.firestore.FieldValue.arrayRemove(userDiary[existingEntryIndex])
+                  });
+  
+                  // Add the new entry
+                  const newUserDiary = [...userDiary];
+                  newUserDiary[existingEntryIndex] = { imageUrl, correctAnswer: name };
+  
+                  setUserDiary(newUserDiary);
+                  AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
+                  await docRef.update({
+                    diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: name })
+                  });
+                }
+              }
+            ],
+            { cancelable: false }
+          );
+        } else {
+          // Add the new entry
+          const newUserDiary = [...userDiary, { imageUrl, correctAnswer: name }];
+          setUserDiary(newUserDiary);
+          AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
+          await docRef.update({
+            diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: name })
+          });
+        }
+  
+      })
+      .catch(function(error) {
+        console.error(error.message);
+      });
+    } else {
+      console.error('Image selection was cancelled or there was an error');
+    }
+  };
+  
+  const pickImageLocal = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.5,
+      base64: true,
+    });
+  
+    console.log("ImagePicker result:", result);
+  
+    if (!result.cancelled && result.assets[0].uri) {
+      const image = `data:image/jpg;base64,${result.assets[0].base64}`;
+  
+      axios({
+        method: "POST",
+        url: "https://detect.roboflow.com/waste-classification-uwqfy/1",
+        params: {
+          api_key: "3QdxSGtdKAUtfOwAjkC4"
+        },
+        data: image,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      })
+      .then(async function(response) {
+        console.log(response.data);
+        setApiResult(response.data);
+  
+        // Get the predicted class from the response
+        const predictedClass = response.data.predictions[0].class;
+  
+        // Compare the predicted class to the name variable
+        if (predictedClass === name) {
+          setIsCorrect(true);
+        } else {
+          setIsCorrect(false);
+        }
+  
+        // Handle Firebase storage and Firestore operations
+        const user = firebase.auth().currentUser;
+        const docRef = firebase.firestore().collection('users').doc(user.email);
+  
+        // Check if the entry already exists in userDiary
+        const existingEntryIndex = userDiary.findIndex(entry => entry.correctAnswer === name);
+  
+        if (existingEntryIndex !== -1) {
+          // Confirm replacement of the existing entry
+          Alert.alert(
+            "Replace existing entry?",
+            "An entry for this item already exists in your diary. Do you want to replace it with the new image?",
+            [
+              {
+                text: "Cancel",
+                onPress: () => console.log("Cancel Pressed"),
+                style: "cancel"
+              },
+              {
+                text: "OK",
+                onPress: async () => {
+                  // Get the reference to the existing image
+                  const existingImageRef = firebase.storage().refFromURL(userDiary[existingEntryIndex].imageUrl);
+  
+                  // Delete the existing image
+                  await existingImageRef.delete();
+  
+                  // Update the Firestore document
+                  await docRef.update({
+                    diary: firebase.firestore.FieldValue.arrayRemove(userDiary[existingEntryIndex])
+                  });
+  
+                  // Add the new entry
+                  const newUserDiary = [...userDiary];
+                  newUserDiary[existingEntryIndex] = { imageUrl, correctAnswer: name };
+  
+                  setUserDiary(newUserDiary);
+                  AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
+                  await docRef.update({
+                    diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: name })
+                  });
+                }
+              }
+            ],
+            { cancelable: false }
+          );
+        } else {
+          // Add the new entry
+          const newUserDiary = [...userDiary, { imageUrl, correctAnswer: name }];
+          setUserDiary(newUserDiary);
+          AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
+          await docRef.update({
+            diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: name })
+          });
+        }
+  
+      })
+      .catch(function(error) {
+        console.error(error.message);
+      });
+    } else {
+      console.error('Image selection was cancelled or there was an error');
+    }
+  };
+  
+  
+  /*
+  const takePhotoLocal = async () => {
     console.log("Starting takePhotoLocal function");
     let result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
@@ -371,6 +582,8 @@ export default function CameraScreen({ route, navigation }) {
     }
   };
 
+  */
+
   useEffect(() => {
     console.log('isCorrect:', isCorrect);
     console.log('challengeNumber:', challengeNumber);
@@ -596,7 +809,7 @@ const styles = StyleSheet.create({
   playButtonText2: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: width * 0.1,
+    fontSize: width * 0.075,
     alignSelf: 'center',
     marginTop: width * 0.125,
   },

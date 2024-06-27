@@ -69,7 +69,30 @@ export default function QuizScreen({ navigation }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState(questions[currentQuestionIndex]);
 
-  
+  /*
+  useEffect(() => {
+    const sendQuizToFirebase = async () => {
+      const lessonsRef = firebase.firestore().collection('quizzes').doc('Quiz3');
+      
+      // Assuming `trashes` should be replaced with `questions` as `trashes` is not defined in the provided context
+      const questionsMap = questions.reduce((acc, item, index) => {
+        const { questionText, choices, correctAnswer } = item;
+        acc[`Question${index + 1}`] = { questionText, choices, correctAnswer };
+        return acc;
+      }, {});
+
+      try {
+        await lessonsRef.set({ questions: questionsMap }, { merge: true });
+        console.log('Quiz data sent successfully');
+      } catch (error) {
+        console.error('Error sending quiz data:', error);
+      }
+    };
+
+    sendQuizToFirebase();
+  }, []);
+  */
+
   useEffect(() => {
     if (isCorrect !== null) {
       const user = firebase.auth().currentUser;

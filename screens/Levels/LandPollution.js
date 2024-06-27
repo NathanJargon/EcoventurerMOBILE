@@ -14,7 +14,112 @@ export default function LandPollution({ navigation }) {
   const levelNames = ['Land Pollution', 'Recycling Wastes', 'Pollution'];
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentChallenge, setCurrentChallenge] = useState(0);
+
+  const [trashes, setTrashes] = useState([]); 
+
+  useEffect(() => {
+    const fetchTrashes = async () => {
+      const docRef = firebase.firestore().collection('lessons').doc('Air, Water, and Land Pollution');
+      const doc = await docRef.get();
+      if (doc.exists) {
+        const data = doc.data();
+        if (data.trashes) {
+          // Assuming you want to flatten the structure to an array of trashes
+          const trashesArray = Object.entries(data.trashes).reduce((acc, [level, trashes]) => {
+            // Add the level to each trash object
+            const trashesWithLevel = trashes.map(trash => ({ ...trash, level }));
+            return acc.concat(trashesWithLevel);
+          }, []);
+          setTrashes(trashesArray);
+        }
+      } else {
+        console.log("No such document!");
+      }
+    };
+
+    fetchTrashes();
+  }, []);
+
+  /*
+  const trashes = [
+    { 
+      name: 'Plastic Bottles', 
+      level: 1, 
+      description: 'While plastic bottles provide convenience and portability for beverages, when incorrectly discarded, they pose environmental difficulties, leading to pollution and resource depletion. Despite its benefits in terms of ease and durability, the impact on ecosystems and marine life highlights the importance of responsible usage and recycling in order to offset environmental harm.' 
+    },
+    { 
+      name: 'Trash', 
+      level: 2,
+      description: 'The significance of waste management for cleanliness and disease prevention is apparent, but inappropriate disposal causes pollution and harm to animals. While responsible trash management contributes to a cleaner and healthier environment, the impact of irresponsible garbage disposal underlines the need of sustainable waste management strategies.'
+    },
+    { 
+      name: 'Dirty Water', 
+      level: 3,
+      description: 'Clean water is essential for human health and environmental sustainability, yet unclean water is a hazard to both. Despite the benefit of guaranteeing community well-being, water pollution\'s environmental impact highlights the critical need for water conservation and pollution control methods.'
+    },
+    { 
+      name: 'Car Exhaust', 
+      level: 4,
+      description: 'While vehicles are undeniably important in modern mobility, emissions from automotive exhaust contribute greatly to air pollution and climate change. While automobiles give benefits in terms of transportation efficiency, addressing the environmental effect necessitates efforts to promote cleaner technology and sustainable transportation alternatives.'
+    },
+    { 
+      name: 'Unused Tires', 
+      level: 5,
+      description: 'Tires are necessary for safe transportation, but improper recycling poses environmental hazards such as habitat damage and pollution. Despite the benefit of improving road safety, the environmental effect of tire trash highlights the significance of efficient recycling and disposal techniques.'
+    },
+    { 
+      name: 'Motorcycle Emission', 
+      level: 6,
+      description: 'Motorcycles are a fuel-efficient mode of transportation, but their emissions add to air pollution, which has an influence on both air quality and human health. While motorbikes provide advantages in terms of flexibility and efficiency, addressing the environmental effect necessitates the promotion of emission-reducing technologies and sustainable transportation methods.'
+    },
+    { 
+      name: 'Used Facemask', 
+      level: 7,
+      description: 'Facemasks are essential for avoiding infectious illnesses, but inappropriate disposal endangers the environment. Despite the benefit of preserving public health, the impact of discarded facemasks highlights the importance of proper disposal procedures in order to reduce pollution and maintain ecosystems.'
+    },
+    { 
+      name: 'Straws and Utensils', 
+      level: 8,
+      description: 'Straws and utensils are useful, but when discarded carelessly, they add to plastic pollution. While providing benefits in terms of hygiene and convenience, the environmental effect emphasizes the significance of adopting eco-friendly alternatives and supporting appropriate disposal practices.'
+    },
+    { 
+      name: 'Plastic Bags', 
+      level: 9,
+      description: 'Plastic bags are convenient, but when not disposed of properly, they contribute to environmental degradation and harm to animals. Despite their cost and lightweight design benefits, the environmental effect highlights the need for reduced single-use plastic use and enhanced recycling initiatives.'
+    },
+    { 
+      name: 'Unused Appliances', 
+      level: 10,
+      description: 'Appliances improve contemporary living, yet inappropriate disposal as electronic trash contributes to pollution. Despite the convenience and efficiency benefits, addressing the environmental effect necessitates responsible e-waste management, recycling activities, and sustainable product design.'
+    }
+  ];
   
+  useEffect(() => {
+    const sendTrashesToFirebase = async () => {
+      const lessonsRef = firebase.firestore().collection('lessons').doc('Air, Water, and Land Pollution');
+      
+      // Transforming trashes array to a map with level as key and array of {name, description} as value
+      const trashesMap = trashes.reduce((acc, {level, name, description}) => {
+        if (!acc[level]) {
+          acc[level] = [];
+        }
+        acc[level].push({name, description});
+        return acc;
+      }, {});
+
+      try {
+        await lessonsRef.set({ trashes: trashesMap }, { merge: true });
+        console.log('Trashes data sent successfully');
+      } catch (error) {
+        console.error('Error sending trashes data:', error);
+      }
+    };
+
+    sendTrashesToFirebase();
+  }, []);
+
+  */
+
   useFocusEffect(
     React.useCallback(() => {
       const fetchUserData = async () => {
@@ -83,60 +188,6 @@ export default function LandPollution({ navigation }) {
       }
     }
   };
-
-  const trashes = [
-    { 
-      name: 'Plastic Bottles', 
-      level: 1, 
-      description: 'While plastic bottles provide convenience and portability for beverages, when incorrectly discarded, they pose environmental difficulties, leading to pollution and resource depletion. Despite its benefits in terms of ease and durability, the impact on ecosystems and marine life highlights the importance of responsible usage and recycling in order to offset environmental harm.' 
-    },
-    { 
-      name: 'Trash', 
-      level: 2,
-      description: 'The significance of waste management for cleanliness and disease prevention is apparent, but inappropriate disposal causes pollution and harm to animals. While responsible trash management contributes to a cleaner and healthier environment, the impact of irresponsible garbage disposal underlines the need of sustainable waste management strategies.'
-    },
-    { 
-      name: 'Dirty Water', 
-      level: 3,
-      description: 'Clean water is essential for human health and environmental sustainability, yet unclean water is a hazard to both. Despite the benefit of guaranteeing community well-being, water pollution\'s environmental impact highlights the critical need for water conservation and pollution control methods.'
-    },
-    { 
-      name: 'Car Exhaust', 
-      level: 4,
-      description: 'While vehicles are undeniably important in modern mobility, emissions from automotive exhaust contribute greatly to air pollution and climate change. While automobiles give benefits in terms of transportation efficiency, addressing the environmental effect necessitates efforts to promote cleaner technology and sustainable transportation alternatives.'
-    },
-    { 
-      name: 'Unused Tires', 
-      level: 5,
-      description: 'Tires are necessary for safe transportation, but improper recycling poses environmental hazards such as habitat damage and pollution. Despite the benefit of improving road safety, the environmental effect of tire trash highlights the significance of efficient recycling and disposal techniques.'
-    },
-    { 
-      name: 'Motorcycle Emission', 
-      level: 6,
-      description: 'Motorcycles are a fuel-efficient mode of transportation, but their emissions add to air pollution, which has an influence on both air quality and human health. While motorbikes provide advantages in terms of flexibility and efficiency, addressing the environmental effect necessitates the promotion of emission-reducing technologies and sustainable transportation methods.'
-    },
-    { 
-      name: 'Used Facemask', 
-      level: 7,
-      description: 'Facemasks are essential for avoiding infectious illnesses, but inappropriate disposal endangers the environment. Despite the benefit of preserving public health, the impact of discarded facemasks highlights the importance of proper disposal procedures in order to reduce pollution and maintain ecosystems.'
-    },
-    { 
-      name: 'Straws and Utensils', 
-      level: 8,
-      description: 'Straws and utensils are useful, but when discarded carelessly, they add to plastic pollution. While providing benefits in terms of hygiene and convenience, the environmental effect emphasizes the significance of adopting eco-friendly alternatives and supporting appropriate disposal practices.'
-    },
-    { 
-      name: 'Plastic Bags', 
-      level: 9,
-      description: 'Plastic bags are convenient, but when not disposed of properly, they contribute to environmental degradation and harm to animals. Despite their cost and lightweight design benefits, the environmental effect highlights the need for reduced single-use plastic use and enhanced recycling initiatives.'
-    },
-    { 
-      name: 'Unused Appliances', 
-      level: 10,
-      description: 'Appliances improve contemporary living, yet inappropriate disposal as electronic trash contributes to pollution. Despite the convenience and efficiency benefits, addressing the environmental effect necessitates responsible e-waste management, recycling activities, and sustainable product design.'
-    }
-  ];
-
 
   if (loading) {
     return (

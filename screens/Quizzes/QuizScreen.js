@@ -6,65 +6,6 @@ import { firebase } from '../FirebaseConfig';
 
 const { width, height } = Dimensions.get('window');
 
-const questions = [
-  {
-    questionText: 'Which of the following materials takes the longest to decompose in a landfill?',
-    choices: ['Plastic', 'Paper', 'Glass', 'Metal'],
-    correctAnswer: 'Plastic'
-  },
-  {
-    questionText: 'What is the importance of throwing plastic bottles in trashcans?',
-    choices: [
-      'Placing plastic bottles in the trash helps to keep our environment clean and safe.',
-      'To build roads',
-      'To reduce noise pollution',
-      'To increase air pollution.'
-    ],
-    correctAnswer: 'Placing plastic bottles in the trash helps to keep our environment clean and safe.'
-  },
-  {
-    questionText: 'In what ways can you save up water from the faucet?',
-    choices: [
-      'By leaving the faucet running continuously.',
-      'By using water excessively and ignoring any leaks.',
-      'By carefully using it and properly closing it after usage.',
-      'By keeping the faucet open when not in use.'
-    ],
-    correctAnswer: 'By carefully using it and properly closing it after usage.'
-  },
-  {
-    questionText: 'Why is it good to plant trees in our neighborhood?',
-    choices: [
-      'Planting trees increases air pollution and worsens air quality.',
-      'Trees have no impact on preventing floods or improving air quality.',
-      'Planting trees in the neighborhood leads to a decrease in overall greenery and aesthetics.',
-      'Planting trees can prevent floods and makes the air cleaner'
-    ],
-    correctAnswer: 'Planting trees can prevent floods and makes the air cleaner'
-  },
-  {
-    questionText: 'How can you save energy at home?',
-    choices: [
-      'Turn on the lights for 24hrs',
-      'Replace the light bulb',
-      'By closing the lights or other electronics that are not being used.',
-      'Play with the light switch'
-    ],
-    correctAnswer: 'By closing the lights or other electronics that are not being used.'
-  },
-  {
-    questionText: 'What are the benefits of reducing plastic waste?',
-    choices: [
-      'Increasing plastic waste helps in better resource utilization and recycling efficiency.',
-      'I keep our planet cleaner, save resources and reduce the problems in recycling',
-      'Plastic waste has no impact on the cleanliness of the planet or resource conservation.',
-      'Disposing of more plastic waste enhances the recycling process and reduces environmental issues.'
-    ],
-    correctAnswer: 'I keep our planet cleaner, save resources and reduce the problems in recycling'
-  }
-];
-
-
 export default function QuizScreen({ navigation }) {
   const [isCorrect, setIsCorrect] = useState(null);
   const [image, setImage] = useState(null);
@@ -73,8 +14,57 @@ export default function QuizScreen({ navigation }) {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState(questions[currentQuestionIndex]);
+  const [quizQuestions, setQuizQuestions] = useState([]);
+  const [questions, setQuestions] = useState ([]);
+  /*
+  useEffect(() => {
+    const sendQuizToFirebase = async () => {
+      const lessonsRef = firebase.firestore().collection('quizzes').doc('Quiz1');
+      
+      // Assuming `trashes` should be replaced with `questions` as `trashes` is not defined in the provided context
+      const questionsMap = questions.reduce((acc, item, index) => {
+        const { questionText, choices, correctAnswer } = item;
+        acc[`Question${index + 1}`] = { questionText, choices, correctAnswer };
+        return acc;
+      }, {});
 
+      try {
+        await lessonsRef.set({ questions: questionsMap }, { merge: true });
+        console.log('Quiz data sent successfully');
+      } catch (error) {
+        console.error('Error sending quiz data:', error);
+      }
+    };
+
+    sendQuizToFirebase();
+  }, []);
+  */
   
+  useEffect(() => {
+    const fetchQuizFromFirebase = async () => {
+      const quizRef = firebase.firestore().collection('quizzes').doc('Quiz1');
+  
+      try {
+        const doc = await quizRef.get();
+        if (doc.exists) {
+          const data = doc.data();
+          // Assuming the structure of questions in Firebase is an object with keys like `Question1`, `Question2`, etc.
+          const fetchedQuestions = Object.keys(data.questions).map(key => data.questions[key]);
+          console.log(fetchedQuestions);
+          setQuestions(fetchedQuestions);
+          setQuizQuestions(fetchedQuestions);
+          setCurrentQuestion(fetchedQuestions[currentQuestionIndex]);
+        } else {
+          console.log('No such document!');
+        }
+      } catch (error) {
+        console.error('Error fetching quiz data:', error);
+      }
+    };
+  
+    fetchQuizFromFirebase();
+  }, []);
+
   useEffect(() => {
     if (isCorrect !== null) {
       const user = firebase.auth().currentUser;
