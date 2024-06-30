@@ -1,96 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, Animated, Modal, StyleSheet, Text, Button, Image, View, Platform, Dimensions, TouchableOpacity } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import axios from 'axios';
+import { Alert, Animated, StyleSheet, Text, Image, View, Dimensions, TouchableOpacity } from 'react-native';
 import { firebase } from '../FirebaseConfig';
 
 const { width, height } = Dimensions.get('window');
 
-const questions = [
-  {
-    questionText: 'What do birds use their beaks for?',
-    choices: [
-      'For flying.',
-      'To show off for other birds when fighting.',
-      'For eating, building nests, and sometimes for defending themselves.',
-      'Destroying plants to and create their own nest.'
-    ],
-    correctAnswer: 'For eating, building nests, and sometimes for defending themselves.'
-  },
-  {
-    questionText: 'What is the importance of Butterflies?',
-    choices: [
-      'To only lay unfertilized eggs.',
-      'Help in plant reproduction and pollination.',
-      'For decoration purposes only.',
-      'To become food for other insects.'
-    ],
-    correctAnswer: 'Help in plant reproduction and pollination.'
-  },
-  {
-    questionText: 'What is the purpose of a flower on a plant?',
-    choices: [
-      'To produce seeds for plant reproduction.',
-      'Flowers do not have a purpose in the environment.',
-      'Used as decoration for events (weddings, birthdays, or anniversaries)',
-      'To lay eggs and turn into birds.'
-    ],
-    correctAnswer: 'To produce seeds for plant reproduction'
-  },
-  {
-    questionText: 'Why do people keep plants indoors?',
-    choices: [
-      'To attract pests and gather dust.',
-      'To attract good karma and money.',
-      'To let it grow without providing the plant with water and sunlight.',
-      'To keep plants indoors for decoration and improve air quality.'
-    ],
-    correctAnswer: 'To keep plants indoors for decoration and improve air quality'
-  },
-  {
-    questionText: 'How can you take care of an indoor plant?',
-    choices: [
-      'Taking care of an indoor plant involves watering it regularly and placing it where it can get sunlight.',
-      'By letting the plant grow and not provide its needs such as water and sunlight.',
-      'By pouring chemicals to help with growth as alternatives to natural water.',
-      'There is no way to take care of an indoor plant.'
-    ],
-    correctAnswer: 'Taking care of an indoor plant involves watering it regularly and placing it where it can get sunlight.'
-  }
-];
-
 export default function QuizScreen({ navigation }) {
   const [isCorrect, setIsCorrect] = useState(null);
-  const [image, setImage] = useState(null);
-  const [apiResult, setApiResult] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [fadeAnim] = useState(new Animated.Value(0));
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [currentQuestion, setCurrentQuestion] = useState(questions[currentQuestionIndex]);
+  const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [questions, setQuestions] = useState([]);
 
-   /*
   useEffect(() => {
-    const sendQuizToFirebase = async () => {
-      const lessonsRef = firebase.firestore().collection('quizzes').doc('Quiz2');
-      
-      // Assuming `trashes` should be replaced with `questions` as `trashes` is not defined in the provided context
-      const questionsMap = questions.reduce((acc, item, index) => {
-        const { questionText, choices, correctAnswer } = item;
-        acc[`Question${index + 1}`] = { questionText, choices, correctAnswer };
-        return acc;
-      }, {});
+    const fetchQuizFromFirebase = async () => {
+      const quizRef = firebase.firestore().collection('quizzes').doc('Quiz2');
 
       try {
-        await lessonsRef.set({ questions: questionsMap }, { merge: true });
-        console.log('Quiz data sent successfully');
+        const doc = await quizRef.get();
+        if (doc.exists) {
+          const data = doc.data();
+          console.log('Fetched data:', data);
+
+          if (data.questions) {
+            const fetchedQuestions = Object.keys(data.questions).map(key => data.questions[key]);
+            console.log('Fetched questions:', fetchedQuestions);
+            setQuestions(fetchedQuestions);
+            setCurrentQuestion(fetchedQuestions[0]); // Initialize with the first question
+          } else {
+            console.log('data.questions is undefined');
+          }
+        } else {
+          console.log('No such document!');
+        }
       } catch (error) {
-        console.error('Error sending quiz data:', error);
+        console.error('Error fetching quiz data:', error);
       }
     };
 
-    sendQuizToFirebase();
+    fetchQuizFromFirebase();
   }, []);
-  */
 
   useEffect(() => {
     if (isCorrect !== null) {
@@ -131,37 +78,35 @@ export default function QuizScreen({ navigation }) {
             setCurrentQuestion(questions[newIndex]);
             return newIndex;
           });
-          setCurrentQuestion(questions[currentQuestionIndex]);
           setIsCorrect(null);
         }
       }
     }
-  }, [isCorrect]);
+  }, [isCorrect, questions, currentQuestionIndex, navigation]);
 
   return (
     <View style={styles.container}>
-
       <View style={styles.header}>
         <Image
           source={require('../../assets/header.png')}
           style={styles.image}
         />
-        <View style={[styles.backButtonContainer, {flexDirection: 'row', justifyContent: 'space-between'}]}>
+        <View style={[styles.backButtonContainer, { flexDirection: 'row', justifyContent: 'space-between' }]}>
           <TouchableOpacity onPress={() => {
-              Alert.alert(
-                "Are you going to leave?",
-                "If you stop the quiz, progress cannot be saved. Do you want to continue?",
-                [
-                  {
-                    text: "No",
-                    onPress: () => console.log("Cancel Pressed"),
-                    style: "cancel"
-                  },
-                  { text: "Yes", onPress: () => navigation.navigate('Recycling Wastes') }
-                ],
-                { cancelable: false }
-              );
-            }}>
+            Alert.alert(
+              "Are you going to leave?",
+              "If you stop the quiz, progress cannot be saved. Do you want to continue?",
+              [
+                {
+                  text: "No",
+                  onPress: () => console.log("Cancel Pressed"),
+                  style: "cancel"
+                },
+                { text: "Yes", onPress: () => navigation.navigate('Pollution') }
+              ],
+              { cancelable: false }
+            );
+          }}>
             <Image
               source={require('../../assets/round-back.png')}
               style={styles.backButtonImage}
@@ -172,11 +117,13 @@ export default function QuizScreen({ navigation }) {
         </View>
       </View>
 
-      <Text style={styles.labelText}>Quiz: Biodiversity</Text>
+      <Text style={styles.labelText}>Quiz: Recycling</Text>
 
-        <TouchableOpacity style={styles.playButton} onPress={() => null }>
+      {currentQuestion && (
+        <TouchableOpacity style={styles.playButton} onPress={() => null}>
           <Text style={styles.playButtonText2}>{currentQuestion.questionText}</Text>
         </TouchableOpacity>
+      )}
 
       {isCorrect !== null && (
         <Text style={[styles.judgeText, { color: isCorrect ? 'orange' : 'red' }]}>
@@ -184,8 +131,8 @@ export default function QuizScreen({ navigation }) {
         </Text>
       )}
 
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: width * 0.01, }}>
-        {isCorrect === null ? (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: width * 0.01 }}>
+        {isCorrect === null && currentQuestion && Array.isArray(currentQuestion.choices) ? (
           <>
             {currentQuestion.choices.map((choice, index) => (
               <TouchableOpacity key={index} style={styles.button1} onPress={() => setIsCorrect(choice === currentQuestion.correctAnswer)}>
@@ -194,8 +141,8 @@ export default function QuizScreen({ navigation }) {
             ))}
           </>
         ) : (
-          <TouchableOpacity style={[ styles.button1, { marginTop: height * 0.21, height: '25%'} ]} onPress={() => {
-            setIsCorrect(null); 
+          <TouchableOpacity style={[styles.button1, { marginTop: height * 0.21, height: '25%' }]} onPress={() => {
+            setIsCorrect(null);
           }}>
             <Text style={styles.buttonText}>Try again!</Text>
           </TouchableOpacity>
@@ -204,6 +151,7 @@ export default function QuizScreen({ navigation }) {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   centeredView: {

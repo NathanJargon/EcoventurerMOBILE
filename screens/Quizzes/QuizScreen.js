@@ -8,52 +8,30 @@ const { width, height } = Dimensions.get('window');
 
 export default function QuizScreen({ navigation }) {
   const [isCorrect, setIsCorrect] = useState(null);
-  const [image, setImage] = useState(null);
-  const [apiResult, setApiResult] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [fadeAnim] = useState(new Animated.Value(0));
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [currentQuestion, setCurrentQuestion] = useState(questions[currentQuestionIndex]);
   const [quizQuestions, setQuizQuestions] = useState([]);
-  const [questions, setQuestions] = useState ([]);
-  /*
-  useEffect(() => {
-    const sendQuizToFirebase = async () => {
-      const lessonsRef = firebase.firestore().collection('quizzes').doc('Quiz1');
-      
-      // Assuming `trashes` should be replaced with `questions` as `trashes` is not defined in the provided context
-      const questionsMap = questions.reduce((acc, item, index) => {
-        const { questionText, choices, correctAnswer } = item;
-        acc[`Question${index + 1}`] = { questionText, choices, correctAnswer };
-        return acc;
-      }, {});
+  const [questions, setQuestions] = useState([]);
+  const [currentQuestion, setCurrentQuestion] = useState(null);
 
-      try {
-        await lessonsRef.set({ questions: questionsMap }, { merge: true });
-        console.log('Quiz data sent successfully');
-      } catch (error) {
-        console.error('Error sending quiz data:', error);
-      }
-    };
-
-    sendQuizToFirebase();
-  }, []);
-  */
-  
   useEffect(() => {
     const fetchQuizFromFirebase = async () => {
       const quizRef = firebase.firestore().collection('quizzes').doc('Quiz1');
-  
+
       try {
         const doc = await quizRef.get();
         if (doc.exists) {
           const data = doc.data();
-          // Assuming the structure of questions in Firebase is an object with keys like `Question1`, `Question2`, etc.
-          const fetchedQuestions = Object.keys(data.questions).map(key => data.questions[key]);
-          console.log(fetchedQuestions);
-          setQuestions(fetchedQuestions);
-          setQuizQuestions(fetchedQuestions);
-          setCurrentQuestion(fetchedQuestions[currentQuestionIndex]);
+          console.log('Fetched data:', data);
+
+          if (data.questions) {
+            const fetchedQuestions = Object.keys(data.questions).map(key => data.questions[key]);
+            console.log('Fetched questions:', fetchedQuestions);
+            setQuestions(fetchedQuestions);
+            setQuizQuestions(fetchedQuestions);
+            setCurrentQuestion(fetchedQuestions[currentQuestionIndex]);
+          } else {
+            console.log('data.questions is undefined');
+          }
         } else {
           console.log('No such document!');
         }
@@ -61,7 +39,7 @@ export default function QuizScreen({ navigation }) {
         console.error('Error fetching quiz data:', error);
       }
     };
-  
+
     fetchQuizFromFirebase();
   }, []);
 
@@ -104,7 +82,6 @@ export default function QuizScreen({ navigation }) {
             setCurrentQuestion(questions[newIndex]);
             return newIndex;
           });
-          setCurrentQuestion(questions[currentQuestionIndex]);
           setIsCorrect(null);
         }
       }
@@ -119,22 +96,22 @@ export default function QuizScreen({ navigation }) {
           source={require('../../assets/header.png')}
           style={styles.image}
         />
-        <View style={[styles.backButtonContainer, {flexDirection: 'row', justifyContent: 'space-between'}]}>
+        <View style={[styles.backButtonContainer, { flexDirection: 'row', justifyContent: 'space-between' }]}>
           <TouchableOpacity onPress={() => {
-              Alert.alert(
-                "Are you going to leave?",
-                "If you stop the quiz, progress cannot be saved. Do you want to continue?",
-                [
-                  {
-                    text: "No",
-                    onPress: () => console.log("Cancel Pressed"),
-                    style: "cancel"
-                  },
-                  { text: "Yes", onPress: () => navigation.navigate('Land Pollution') }
-                ],
-                { cancelable: false }
-              );
-            }}>
+            Alert.alert(
+              "Are you going to leave?",
+              "If you stop the quiz, progress cannot be saved. Do you want to continue?",
+              [
+                {
+                  text: "No",
+                  onPress: () => console.log("Cancel Pressed"),
+                  style: "cancel"
+                },
+                { text: "Yes", onPress: () => navigation.navigate('Land Pollution') }
+              ],
+              { cancelable: false }
+            );
+          }}>
             <Image
               source={require('../../assets/round-back.png')}
               style={styles.backButtonImage}
@@ -147,9 +124,9 @@ export default function QuizScreen({ navigation }) {
 
       <Text style={styles.labelText}>Quiz: Pollution</Text>
 
-        <TouchableOpacity style={styles.playButton} onPress={() => null }>
-          <Text style={styles.playButtonText2}>{currentQuestion.questionText}</Text>
-        </TouchableOpacity>
+      <TouchableOpacity style={styles.playButton} onPress={() => null}>
+        <Text style={styles.playButtonText2}>{currentQuestion?.questionText || "Loading question..."}</Text>
+      </TouchableOpacity>
 
       {isCorrect !== null && (
         <Text style={[styles.judgeText, { color: isCorrect ? 'orange' : 'red' }]}>
@@ -157,8 +134,8 @@ export default function QuizScreen({ navigation }) {
         </Text>
       )}
 
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: width * 0.01, }}>
-        {isCorrect === null ? (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: width * 0.01 }}>
+        {isCorrect === null && currentQuestion && Array.isArray(currentQuestion.choices) ? (
           <>
             {currentQuestion.choices.map((choice, index) => (
               <TouchableOpacity key={index} style={styles.button1} onPress={() => setIsCorrect(choice === currentQuestion.correctAnswer)}>
@@ -167,8 +144,8 @@ export default function QuizScreen({ navigation }) {
             ))}
           </>
         ) : (
-          <TouchableOpacity style={[ styles.button1, { marginTop: height * 0.21, height: '25%'} ]} onPress={() => {
-            setIsCorrect(null); 
+          <TouchableOpacity style={[styles.button1, { marginTop: height * 0.21, height: '25%' }]} onPress={() => {
+            setIsCorrect(null);
           }}>
             <Text style={styles.buttonText}>Try again!</Text>
           </TouchableOpacity>

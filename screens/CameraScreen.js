@@ -61,214 +61,266 @@ export default function CameraScreen({ route, navigation }) {
   }, []);
 
   const takePhotoLocal = async () => {
-    console.log("Starting takePhoto function");
-    let result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.5,
-      base64: true,
-    });
-  
-    console.log("ImagePicker result:", result);
-  
-    if (!result.cancelled && result.assets[0].uri) {
-      const image = `data:image/jpg;base64,${result.assets[0].base64}`;
-  
-      axios({
-        method: "POST",
-        url: "https://detect.roboflow.com/waste-classification-uwqfy/1",
-        params: {
-          api_key: "3QdxSGtdKAUtfOwAjkC4"
-        },
-        data: image,
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        }
-      })
-      .then(async function(response) {
-        console.log(response.data);
-        setApiResult(response.data);
-  
-        // Get the predicted class from the response
-        const predictedClass = response.data.predictions[0].class;
-  
-        // Compare the predicted class to the name variable
-        if (predictedClass === name) {
-          setIsCorrect(true);
-        } else {
-          setIsCorrect(false);
-        }
-  
-        // Handle Firebase storage and Firestore operations
-        const user = firebase.auth().currentUser;
-        const docRef = firebase.firestore().collection('users').doc(user.email);
-  
-        // Check if the entry already exists in userDiary
-        const existingEntryIndex = userDiary.findIndex(entry => entry.correctAnswer === name);
-  
-        if (existingEntryIndex !== -1) {
-          // Confirm replacement of the existing entry
-          Alert.alert(
-            "Replace existing entry?",
-            "An entry for this item already exists in your diary. Do you want to replace it with the new image?",
-            [
-              {
-                text: "Cancel",
-                onPress: () => console.log("Cancel Pressed"),
-                style: "cancel"
-              },
-              {
-                text: "OK",
-                onPress: async () => {
-                  // Get the reference to the existing image
-                  const existingImageRef = firebase.storage().refFromURL(userDiary[existingEntryIndex].imageUrl);
-  
-                  // Delete the existing image
-                  await existingImageRef.delete();
-  
-                  // Update the Firestore document
-                  await docRef.update({
-                    diary: firebase.firestore.FieldValue.arrayRemove(userDiary[existingEntryIndex])
-                  });
-  
-                  // Add the new entry
-                  const newUserDiary = [...userDiary];
-                  newUserDiary[existingEntryIndex] = { imageUrl, correctAnswer: name };
-  
-                  setUserDiary(newUserDiary);
-                  AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
-                  await docRef.update({
-                    diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: name })
-                  });
-                }
-              }
-            ],
-            { cancelable: false }
-          );
-        } else {
-          // Add the new entry
-          const newUserDiary = [...userDiary, { imageUrl, correctAnswer: name }];
-          setUserDiary(newUserDiary);
-          AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
-          await docRef.update({
-            diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: name })
-          });
-        }
-  
-      })
-      .catch(function(error) {
-        console.error(error.message);
+    try {
+      console.log("Starting takePhotoLocal function");
+      let result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: true,
+        aspect: [3, 4],
+        quality: 0.3,
+        base64: true,
       });
-    } else {
-      console.error('Image selection was cancelled or there was an error');
+  
+      console.log("ImagePicker result:", result);
+  
+      if (!result.cancelled && result.assets && result.assets[0]) {
+        setIsAnalyzing(true);
+        const { uri } = result.assets[0];
+        const response = await fetch(uri);
+        const blob = await response.blob();
+  
+        const imageName = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + ".jpg";
+        const ref = firebase.storage().ref().child(imageName);
+        await ref.put(blob);
+        const imageUrl = await ref.getDownloadURL();
+  
+        let formData = new FormData();
+        formData.append('image_url', imageUrl);
+        formData.append('candidate_labels', 'Plastic Bottles,Trash,Dirty Water,Car Exhaust,Unused Tires,Motorcycle Emission,Used Facemask,Straws and Utensils,Plastic Bags,Unused Appliances,Bird,Butterfly,Mango Tree,Indoor Plant,Outdoor Plant,Flower,Grass,Leaves,Cat,Dog,Plastic Bottles inside the Trashcan,Trashcan,AA Battery,Phone Charging Cables,Unused Cardboard Boxes,Reusable Bag,Aluminum Can,Tumbler,Newspaper,Food Container');
+  
+        console.log("Sending POST request to server");
+  
+        const image = `data:image/jpg;base64,${result.assets[0].base64}`;
+        setImage(image);
+  
+        axios({
+          method: "POST",
+          url: "http://nashandrew.pythonanywhere.com/predict",
+          data: formData,
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
+        })
+        .then(async (response) => {
+          console.log("API call was successful. Response data:", response.data);
+          const labels = response.data.labels.replace(/[()]/g, '').split(', ').map(label => label.replace(/['"]/g, ''));
+          console.log('Labels:', labels);
+  
+          const predictions = labels.map(label => label.toLowerCase());
+          console.log('Predictions:', predictions);
+  
+          const isCorrect = predictions.includes(currentName.toLowerCase());
+          setIsCorrect(isCorrect);
+  
+          const user = firebase.auth().currentUser;
+          const docRef = firebase.firestore().collection('users').doc(user.email);
+  
+          const existingEntryIndex = userDiary.findIndex(entry => entry.correctAnswer === currentName);
+          console.log('existingEntryIndex:', existingEntryIndex);
+          console.log('currentName:', currentName);
+          console.log('imageUrl:', imageUrl);
+  
+          if (existingEntryIndex !== -1) {
+            Alert.alert(
+              "Replace existing entry?",
+              "An entry for this item already exists in your diary. Do you want to replace it with the new image?",
+              [
+                {
+                  text: "Cancel",
+                  onPress: () => {
+                    console.log("Cancel Pressed");
+                    setIsAnalyzing(false);
+                  },
+                  style: "cancel"
+                },
+                {
+                  text: "OK",
+                  onPress: async () => {
+                    try {
+                      const existingImageRef = firebase.storage().refFromURL(userDiary[existingEntryIndex].imageUrl);
+                      await existingImageRef.delete();
+                      await docRef.update({
+                        diary: firebase.firestore.FieldValue.arrayRemove(userDiary[existingEntryIndex])
+                      });
+  
+                      const newUserDiary = [...userDiary];
+                      newUserDiary[existingEntryIndex] = { imageUrl, correctAnswer: currentName };
+                      setUserDiary(newUserDiary);
+                      await AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
+                      await docRef.update({
+                        diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: currentName })
+                      });
+  
+                      setIsAnalyzing(false);
+                    } catch (error) {
+                      console.error("Error during image replacement:", error);
+                      setIsAnalyzing(false);
+                    }
+                  }
+                }
+              ],
+              { cancelable: false }
+            );
+          } else {
+            const newUserDiary = [...userDiary, { imageUrl, correctAnswer: currentName }];
+            setUserDiary(newUserDiary);
+            await AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
+            await docRef.update({
+              diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: currentName })
+            });
+            setIsAnalyzing(false);
+          }
+  
+          if (!isCorrect) {
+            await ref.delete();
+            console.log("Image deleted from Firebase Storage");
+          }
+  
+        })
+        .catch((error) => {
+          console.error("Error occurred during the API call:", error.message);
+          setIsAnalyzing(false);
+        });
+      } else {
+        console.log("Image selection was cancelled or there was an error");
+        setIsAnalyzing(false);
+      }
+    } catch (error) {
+      console.error(error.message);
+      setIsAnalyzing(false);
     }
   };
-  
+
   const pickImageLocal = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.5,
-      base64: true,
-    });
-  
-    console.log("ImagePicker result:", result);
-  
-    if (!result.cancelled && result.assets[0].uri) {
-      const image = `data:image/jpg;base64,${result.assets[0].base64}`;
-  
-      axios({
-        method: "POST",
-        url: "https://detect.roboflow.com/waste-classification-uwqfy/1",
-        params: {
-          api_key: "3QdxSGtdKAUtfOwAjkC4"
-        },
-        data: image,
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        }
-      })
-      .then(async function(response) {
-        console.log(response.data);
-        setApiResult(response.data);
-  
-        // Get the predicted class from the response
-        const predictedClass = response.data.predictions[0].class;
-  
-        // Compare the predicted class to the name variable
-        if (predictedClass === name) {
-          setIsCorrect(true);
-        } else {
-          setIsCorrect(false);
-        }
-  
-        // Handle Firebase storage and Firestore operations
-        const user = firebase.auth().currentUser;
-        const docRef = firebase.firestore().collection('users').doc(user.email);
-  
-        // Check if the entry already exists in userDiary
-        const existingEntryIndex = userDiary.findIndex(entry => entry.correctAnswer === name);
-  
-        if (existingEntryIndex !== -1) {
-          // Confirm replacement of the existing entry
-          Alert.alert(
-            "Replace existing entry?",
-            "An entry for this item already exists in your diary. Do you want to replace it with the new image?",
-            [
-              {
-                text: "Cancel",
-                onPress: () => console.log("Cancel Pressed"),
-                style: "cancel"
-              },
-              {
-                text: "OK",
-                onPress: async () => {
-                  // Get the reference to the existing image
-                  const existingImageRef = firebase.storage().refFromURL(userDiary[existingEntryIndex].imageUrl);
-  
-                  // Delete the existing image
-                  await existingImageRef.delete();
-  
-                  // Update the Firestore document
-                  await docRef.update({
-                    diary: firebase.firestore.FieldValue.arrayRemove(userDiary[existingEntryIndex])
-                  });
-  
-                  // Add the new entry
-                  const newUserDiary = [...userDiary];
-                  newUserDiary[existingEntryIndex] = { imageUrl, correctAnswer: name };
-  
-                  setUserDiary(newUserDiary);
-                  AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
-                  await docRef.update({
-                    diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: name })
-                  });
-                }
-              }
-            ],
-            { cancelable: false }
-          );
-        } else {
-          // Add the new entry
-          const newUserDiary = [...userDiary, { imageUrl, correctAnswer: name }];
-          setUserDiary(newUserDiary);
-          AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
-          await docRef.update({
-            diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: name })
-          });
-        }
-  
-      })
-      .catch(function(error) {
-        console.error(error.message);
+    try {
+      console.log("Starting pickImageLocal function");
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.5,
+        base64: true,
       });
-    } else {
-      console.error('Image selection was cancelled or there was an error');
+  
+      console.log("ImagePicker result:", result);
+  
+      if (!result.cancelled && result.assets && result.assets[0]) {
+        setIsAnalyzing(true);
+        const { uri } = result.assets[0];
+        const response = await fetch(uri);
+        const blob = await response.blob();
+  
+        const imageName = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + ".jpg";
+        const ref = firebase.storage().ref().child(imageName);
+        await ref.put(blob);
+        const imageUrl = await ref.getDownloadURL();
+  
+        let formData = new FormData();
+        formData.append('image_url', imageUrl);
+        formData.append('candidate_labels', 'Plastic Bottles,Trash,Dirty Water,Car Exhaust,Unused Tires,Motorcycle Emission,Used Facemask,Straws and Utensils,Plastic Bags,Unused Appliances,Bird,Butterfly,Mango Tree,Indoor Plant,Outdoor Plant,Flower,Grass,Leaves,Cat,Dog,Plastic Bottles inside the Trashcan,Trashcan,AA Battery,Phone Charging Cables,Unused Cardboard Boxes,Reusable Bag,Aluminum Can,Tumbler,Newspaper,Food Container');
+  
+        console.log("Sending POST request to server");
+  
+        const image = `data:image/jpg;base64,${result.assets[0].base64}`;
+        setImage(image);
+  
+        axios({
+          method: "POST",
+          url: "http://nashandrew.pythonanywhere.com/predict",
+          data: formData,
+          headers: {
+            "Content-Type": "multipart/form-data"
+          }
+        })
+        .then(async (response) => {
+          console.log("API call was successful. Response data:", response.data);
+          const labels = response.data.labels.replace(/[()]/g, '').split(', ').map(label => label.replace(/['"]/g, ''));
+          console.log('Labels:', labels);
+  
+          const predictions = labels.map(label => label.toLowerCase());
+          console.log('Predictions:', predictions);
+  
+          const isCorrect = predictions.includes(currentName.toLowerCase());
+          setIsCorrect(isCorrect);
+  
+          const user = firebase.auth().currentUser;
+          const docRef = firebase.firestore().collection('users').doc(user.email);
+  
+          const existingEntryIndex = userDiary.findIndex(entry => entry.correctAnswer === currentName);
+          console.log('existingEntryIndex:', existingEntryIndex);
+          console.log('currentName:', currentName);
+          console.log('imageUrl:', imageUrl);
+  
+          if (existingEntryIndex !== -1) {
+            Alert.alert(
+              "Replace existing entry?",
+              "An entry for this item already exists in your diary. Do you want to replace it with the new image?",
+              [
+                {
+                  text: "Cancel",
+                  onPress: () => {
+                    console.log("Cancel Pressed");
+                    setIsAnalyzing(false);
+                  },
+                  style: "cancel"
+                },
+                {
+                  text: "OK",
+                  onPress: async () => {
+                    try {
+                      const existingImageRef = firebase.storage().refFromURL(userDiary[existingEntryIndex].imageUrl);
+                      await existingImageRef.delete();
+                      await docRef.update({
+                        diary: firebase.firestore.FieldValue.arrayRemove(userDiary[existingEntryIndex])
+                      });
+  
+                      const newUserDiary = [...userDiary];
+                      newUserDiary[existingEntryIndex] = { imageUrl, correctAnswer: currentName };
+                      setUserDiary(newUserDiary);
+                      await AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
+                      await docRef.update({
+                        diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: currentName })
+                      });
+  
+                      setIsAnalyzing(false);
+                    } catch (error) {
+                      console.error("Error during image replacement:", error);
+                      setIsAnalyzing(false);
+                    }
+                  }
+                }
+              ],
+              { cancelable: false }
+            );
+          } else {
+            const newUserDiary = [...userDiary, { imageUrl, correctAnswer: currentName }];
+            setUserDiary(newUserDiary);
+            await AsyncStorage.setItem('userDiary', JSON.stringify(newUserDiary));
+            await docRef.update({
+              diary: firebase.firestore.FieldValue.arrayUnion({ imageUrl, correctAnswer: currentName })
+            });
+            setIsAnalyzing(false);
+          }
+  
+          if (!isCorrect) {
+            await ref.delete();
+            console.log("Image deleted from Firebase Storage");
+          }
+  
+        })
+        .catch((error) => {
+          console.error("Error occurred during the API call:", error.message);
+          setIsAnalyzing(false);
+        });
+      } else {
+        console.log("Image selection was cancelled or there was an error");
+        setIsAnalyzing(false);
+      }
+    } catch (error) {
+      console.error(error.message);
+      setIsAnalyzing(false);
     }
   };
-  
   
   /*
   const takePhotoLocal = async () => {

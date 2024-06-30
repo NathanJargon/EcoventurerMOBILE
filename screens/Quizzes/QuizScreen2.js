@@ -1,97 +1,43 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, Animated, Modal, StyleSheet, Text, Button, Image, View, Platform, Dimensions, TouchableOpacity } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import axios from 'axios';
+import { Alert, Animated, StyleSheet, Text, Image, View, Dimensions, TouchableOpacity } from 'react-native';
 import { firebase } from '../FirebaseConfig';
 
 const { width, height } = Dimensions.get('window');
 
-const questions = [
-  {
-    questionText: 'Why is it important to put a plastic bottle inside the trashcan?',
-    choices: [
-      'To continue polluting our environment due to landfills.',
-      'To keep our surroundings clean and recycled properly.',
-      'To let it degrade over time.',
-      'To create more plastic bottles and be reused by production companies.'
-    ],
-    correctAnswer: 'To keep our surroundings clean and be recycled properly.'
-  },
-  {
-    questionText: 'What items go into a biodegradable trashcan?',
-    choices: [
-      'Items that can naturally break down over time, like food scraps and some paper products.',
-      'Items that can be recycled such as plastic bottles and containers.',
-      'Technology devices such as computers, mouse, keyboard, etc.',
-      'No items should be put into a biodegradable trashcan.'
-    ],
-    correctAnswer: 'Items that can naturally break down over time, like food scraps and some paper products.'
-  },
-  {
-    questionText: 'What can you do with unused boxes?',
-    choices: [
-      'To be used as fire starters when burning fallen leaves or dead plants.',
-      'To be used as traps for mice.',
-      'You can reuse unused boxes for storage, crafts, or even play.',
-      'To be hidden away and not be used again.'
-    ],
-    correctAnswer: 'You can reuse unused boxes for storage, crafts, or even play.'
-  },
-  {
-    questionText: 'Why is it good to use a reusable bag instead of a plastic bag?',
-    choices: [
-      'There is no good in using reusable bags instead of plastic bags.',
-      'Help reduce the need for single-use plastic bags and recycle/reuse bags for future shopping.',
-      'To collect more reusable bags whenever buying outside.',
-      'It is good as reusable bags also create more profit.'
-    ],
-    correctAnswer: 'Help reduce the need for single-use plastic bags and recycle/reuse bags for future shopping.'
-  },
-  {
-    questionText: 'What is the simplest way to reduce waste at home?',
-    choices: [
-      'To throw every waste away without segregating.',
-      'Recycle materials even if they are not recyclable.',
-      'Dump waste outside the house.',
-      'Recycle materials such as paper, cardboard, and plastics.'
-    ],
-    correctAnswer: 'Recycle materials such as paper, cardboard, and plastics.'
-  }
-];
-
-
 export default function QuizScreen({ navigation }) {
   const [isCorrect, setIsCorrect] = useState(null);
-  const [image, setImage] = useState(null);
-  const [apiResult, setApiResult] = useState(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [fadeAnim] = useState(new Animated.Value(0));
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [currentQuestion, setCurrentQuestion] = useState(questions[currentQuestionIndex]);
+  const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [questions, setQuestions] = useState([]);
 
-  /*
   useEffect(() => {
-    const sendQuizToFirebase = async () => {
-      const lessonsRef = firebase.firestore().collection('quizzes').doc('Quiz3');
-      
-      // Assuming `trashes` should be replaced with `questions` as `trashes` is not defined in the provided context
-      const questionsMap = questions.reduce((acc, item, index) => {
-        const { questionText, choices, correctAnswer } = item;
-        acc[`Question${index + 1}`] = { questionText, choices, correctAnswer };
-        return acc;
-      }, {});
+    const fetchQuizFromFirebase = async () => {
+      const quizRef = firebase.firestore().collection('quizzes').doc('Quiz3');
 
       try {
-        await lessonsRef.set({ questions: questionsMap }, { merge: true });
-        console.log('Quiz data sent successfully');
+        const doc = await quizRef.get();
+        if (doc.exists) {
+          const data = doc.data();
+          console.log('Fetched data:', data);
+
+          if (data.questions) {
+            const fetchedQuestions = Object.keys(data.questions).map(key => data.questions[key]);
+            console.log('Fetched questions:', fetchedQuestions);
+            setQuestions(fetchedQuestions);
+            setCurrentQuestion(fetchedQuestions[0]); // Initialize with the first question
+          } else {
+            console.log('data.questions is undefined');
+          }
+        } else {
+          console.log('No such document!');
+        }
       } catch (error) {
-        console.error('Error sending quiz data:', error);
+        console.error('Error fetching quiz data:', error);
       }
     };
 
-    sendQuizToFirebase();
+    fetchQuizFromFirebase();
   }, []);
-  */
 
   useEffect(() => {
     if (isCorrect !== null) {
@@ -132,37 +78,35 @@ export default function QuizScreen({ navigation }) {
             setCurrentQuestion(questions[newIndex]);
             return newIndex;
           });
-          setCurrentQuestion(questions[currentQuestionIndex]);
           setIsCorrect(null);
         }
       }
     }
-  }, [isCorrect]);
+  }, [isCorrect, questions, currentQuestionIndex, navigation]);
 
   return (
     <View style={styles.container}>
-
       <View style={styles.header}>
         <Image
           source={require('../../assets/header.png')}
           style={styles.image}
         />
-        <View style={[styles.backButtonContainer, {flexDirection: 'row', justifyContent: 'space-between'}]}>
+        <View style={[styles.backButtonContainer, { flexDirection: 'row', justifyContent: 'space-between' }]}>
           <TouchableOpacity onPress={() => {
-              Alert.alert(
-                "Are you going to leave?",
-                "If you stop the quiz, progress cannot be saved. Do you want to continue?",
-                [
-                  {
-                    text: "No",
-                    onPress: () => console.log("Cancel Pressed"),
-                    style: "cancel"
-                  },
-                  { text: "Yes", onPress: () => navigation.navigate('Pollution') }
-                ],
-                { cancelable: false }
-              );
-            }}>
+            Alert.alert(
+              "Are you going to leave?",
+              "If you stop the quiz, progress cannot be saved. Do you want to continue?",
+              [
+                {
+                  text: "No",
+                  onPress: () => console.log("Cancel Pressed"),
+                  style: "cancel"
+                },
+                { text: "Yes", onPress: () => navigation.navigate('Pollution') }
+              ],
+              { cancelable: false }
+            );
+          }}>
             <Image
               source={require('../../assets/round-back.png')}
               style={styles.backButtonImage}
@@ -175,9 +119,11 @@ export default function QuizScreen({ navigation }) {
 
       <Text style={styles.labelText}>Quiz: Recycling</Text>
 
-        <TouchableOpacity style={styles.playButton} onPress={() => null }>
+      {currentQuestion && (
+        <TouchableOpacity style={styles.playButton} onPress={() => null}>
           <Text style={styles.playButtonText2}>{currentQuestion.questionText}</Text>
         </TouchableOpacity>
+      )}
 
       {isCorrect !== null && (
         <Text style={[styles.judgeText, { color: isCorrect ? 'orange' : 'red' }]}>
@@ -185,8 +131,8 @@ export default function QuizScreen({ navigation }) {
         </Text>
       )}
 
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: width * 0.01, }}>
-        {isCorrect === null ? (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: width * 0.01 }}>
+        {isCorrect === null && currentQuestion && Array.isArray(currentQuestion.choices) ? (
           <>
             {currentQuestion.choices.map((choice, index) => (
               <TouchableOpacity key={index} style={styles.button1} onPress={() => setIsCorrect(choice === currentQuestion.correctAnswer)}>
@@ -195,8 +141,8 @@ export default function QuizScreen({ navigation }) {
             ))}
           </>
         ) : (
-          <TouchableOpacity style={[ styles.button1, { marginTop: height * 0.21, height: '25%'} ]} onPress={() => {
-            setIsCorrect(null); 
+          <TouchableOpacity style={[styles.button1, { marginTop: height * 0.21, height: '25%' }]} onPress={() => {
+            setIsCorrect(null);
           }}>
             <Text style={styles.buttonText}>Try again!</Text>
           </TouchableOpacity>
@@ -205,6 +151,7 @@ export default function QuizScreen({ navigation }) {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   centeredView: {
