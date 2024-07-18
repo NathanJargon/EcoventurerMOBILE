@@ -121,7 +121,7 @@ export default function GameScreen({ navigation }) {
               if (index <= levelUnlocked) {
                 navigation.navigate(levelToScreenMapping[levelNames[index]].screen);
               } else {
-                Alert.alert('Locked', `Finish Set ${index} to unlock this set.`);
+                Alert.alert('Locked', `Finish Set ${index} to unlock this set.\nPlay more level on the current set.`);
               }
             }}
           >
