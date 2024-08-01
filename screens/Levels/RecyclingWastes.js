@@ -163,7 +163,7 @@ export default function RecyclingWastes({ navigation }) {
   */
 
   const handleButtonClick = () => {
-    if (levelProgress[0] >= 10) {
+    if (levelProgress[2] >= 10) {
       setIsModalVisible(true);
     }
   };
@@ -174,10 +174,10 @@ export default function RecyclingWastes({ navigation }) {
     newLevelProgress[level] = progress;
     setLevelProgress(newLevelProgress);
     if (level === 0 && progress >= 10) {
-      setLevelUnlocked(1);
+      setLevelUnlocked(3);
       await firebase.firestore().collection('users').doc(user.email).update({
         levelProgress: newLevelProgress,
-        levelUnlocked: 1, // Add this line
+        levelUnlocked: 3, // Add this line
       });
     } else {
       await firebase.firestore().collection('users').doc(user.email).update({
@@ -256,7 +256,7 @@ export default function RecyclingWastes({ navigation }) {
 
           <View style={{ alignItems: 'center', justifyContent: 'center' }}>
           <TouchableOpacity 
-            onPress={levelProgress[1] >= 10 ? handleButtonClick : null} 
+            onPress={levelProgress[2] >= 10 ? handleButtonClick : null} 
             style={{ 
               alignItems: 'center', 
               justifyContent: 'center', 
@@ -266,9 +266,9 @@ export default function RecyclingWastes({ navigation }) {
               width: width * 0.8, 
               height: height * 0.075, 
               borderRadius: 20, 
-              opacity: levelProgress[1] >= 10 ? 1 : 0.5
+              opacity: levelProgress[2] >= 10 ? 1 : 0.5
             }}
-            disabled={levelProgress[1] < 10}
+            disabled={levelProgress[2] < 10}
           >
             <Image
               source={require('../../assets/icons/completed.png')} 
@@ -314,7 +314,7 @@ export default function RecyclingWastes({ navigation }) {
           key={index}
           style={playButtonStyle}
           onPress={() => {
-            if (index < levelProgress[0] ) {
+            if (index < levelProgress[2] ) {
               Alert.alert(
                 'Rechallenge?',
                 'You have already completed this challenge. Would you try again?',
@@ -326,7 +326,7 @@ export default function RecyclingWastes({ navigation }) {
                   },
                     {
                       text: 'Yes',
-                      onPress: () => navigation.navigate('Camera', { 
+                      onPress: () => navigation.navigate('Camera2', { 
                         object: { 
                           challengeNumber: index + 1, 
                           trash: trashes[index], 
@@ -337,8 +337,8 @@ export default function RecyclingWastes({ navigation }) {
                     },
                 ]
               );
-            } else if (index <= levelProgress[0]) {
-              navigation.navigate('Camera', { object: { challengeNumber: index + 1, trash: trashes[index], description: trashes[index].description }, trashes: trashes });
+            } else if (index <= levelProgress[2]) {
+              navigation.navigate('Camera2', { object: { challengeNumber: index + 1, trash: trashes[index], description: trashes[index].description }, trashes: trashes });
             } else {
               Alert.alert('Locked', `Finish Challenge #${index} to unlock this challenge.`);
             }
@@ -347,7 +347,7 @@ export default function RecyclingWastes({ navigation }) {
           <View style={styles.textContainer}>
             <Text style={styles.playButtonText}>{`Challenge #${index + 1}`}</Text>
           </View>
-          {index < levelProgress[1] && (
+          {index < levelProgress[2] && (
             <Image
               source={require('../../assets/icons/completed.png')} 
               style={styles.completedIcon} 

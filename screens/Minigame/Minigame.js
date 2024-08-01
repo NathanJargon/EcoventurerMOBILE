@@ -96,11 +96,11 @@ export default function Minigame({ navigation }) {
 
             Alert.alert(
                 "Game Over!",
-                `You guessed ${matchedCards.length / 2} pairs and earned ${points} points.`,
+                `You guessed ${matchedCards.length / 2} pairs and earned ${points} points. You will be redirected back to main menu to load current data.`,
                 [
                     {
                         text: "OK",
-                        onPress: () => navigation.navigate('Game')
+                        onPress: () => navigation.navigate('Home')
                     }
                 ],
                 { cancelable: false }
@@ -126,7 +126,7 @@ export default function Minigame({ navigation }) {
                                     onPress: () => console.log("Cancel Pressed"),
                                     style: "cancel"
                                 },
-                                { text: "Yes", onPress: () => navigation.navigate('Land Pollution') }
+                                { text: "Yes", onPress: () => navigation.navigate('Game') }
                             ],
                             { cancelable: false }
                         );

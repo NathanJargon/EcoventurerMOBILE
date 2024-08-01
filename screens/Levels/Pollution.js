@@ -146,11 +146,11 @@ export default function Pollution({ navigation }) {
 
   useEffect(() => {
     console.log(levelProgress); 
-    if (levelProgress[0] >= 10 && levelUnlocked !== 1) {
+    if (levelProgress[1] >= 10 && levelUnlocked !== 1) {
       console.log('Setting isModalVisible to true'); 
       setTimeout(() => setIsModalVisible(true), 200);
       const updateProgress = async () => {
-        await saveProgress(0, levelProgress[0]);
+        await saveProgress(0, levelProgress[1]);
       };
       updateProgress();
     }
@@ -307,7 +307,7 @@ export default function Pollution({ navigation }) {
           key={index}
           style={playButtonStyle}
           onPress={() => {
-            if (index < levelProgress[0] ) {
+            if (index < levelProgress[1] ) {
               Alert.alert(
                 'Rechallenge?',
                 'You have already completed this challenge. Would you try again?',
@@ -319,7 +319,7 @@ export default function Pollution({ navigation }) {
                   },
                     {
                       text: 'Yes',
-                      onPress: () => navigation.navigate('Camera', { 
+                      onPress: () => navigation.navigate('Camera1', { 
                         object: { 
                           challengeNumber: index + 1, 
                           trash: trashes[index], 
@@ -330,8 +330,8 @@ export default function Pollution({ navigation }) {
                     },
                 ]
               );
-            } else if (index <= levelProgress[0]) {
-              navigation.navigate('Camera', { object: { challengeNumber: index + 1, trash: trashes[index], description: trashes[index].description }, trashes: trashes });
+            } else if (index <= levelProgress[1]) {
+              navigation.navigate('Camera1', { object: { challengeNumber: index + 1, trash: trashes[index], description: trashes[index].description }, trashes: trashes });
             } else {
               Alert.alert('Locked', `Finish Challenge #${index} to unlock this challenge.`);
             }
@@ -340,7 +340,7 @@ export default function Pollution({ navigation }) {
           <View style={styles.textContainer}>
             <Text style={styles.playButtonText}>{`Challenge #${index + 1}`}</Text>
           </View>
-          {index < levelProgress[0] && (
+          {index < levelProgress[1] && (
             <Image
               source={require('../../assets/icons/completed.png')} 
               style={styles.completedIcon} 

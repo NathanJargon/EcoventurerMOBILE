@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
-export default function CameraScreen({ route, navigation }) {
+export default function CameraScreen1({ route, navigation }) {
   const { object, trashes } = route.params;
   const { challengeNumber, trash, description } = object;
   const { name, level } = trash;
@@ -447,7 +447,7 @@ export default function CameraScreen({ route, navigation }) {
             const userData = doc.data();
             let levelProgress = Array.isArray(userData.levelProgress) ? userData.levelProgress : [0, 0, 0];
   
-            levelProgress[0]++;
+            levelProgress[1]++;
             setLevelProgress([...levelProgress]);
             let newChallenge = currentChallenge + 1;
             let updateObject = {
@@ -515,7 +515,7 @@ export default function CameraScreen({ route, navigation }) {
       setImage(null);
       setCurrentChallenge(nextChallenge);
     } else {
-      navigation.navigate('Land Pollution');
+      navigation.navigate('Pollution');
     }
   };
 
@@ -553,7 +553,7 @@ export default function CameraScreen({ route, navigation }) {
           style={styles.image}
         />
         <View style={styles.backButtonContainer}>
-          <TouchableOpacity onPress={() => navigation.navigate('Land Pollution')}>
+          <TouchableOpacity onPress={() => navigation.navigate('Pollution')}>
             <Image
               source={require('../assets/round-back.png')}
               style={styles.backButtonImage}

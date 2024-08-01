@@ -4,6 +4,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 import CameraScreen from './screens/CameraScreen';
+import CameraScreen1 from './screens/CameraScreen1';
+import CameraScreen2 from './screens/CameraScreen2';
 import LoginScreen from './screens/LoginScreen';
 import SignUpScreen from './screens/SignUpScreen';
 import HomeScreen from './screens/HomeScreen';
@@ -50,6 +52,17 @@ export default function App() {
           component={CameraScreen} 
           options={{ headerShown: false }}
         />
+        <Stack.Screen 
+          name="Camera1" 
+          component={CameraScreen1} 
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen 
+          name="Camera2" 
+          component={CameraScreen2} 
+          options={{ headerShown: false }}
+        />
+        
         <Stack.Screen
           name="ForgotPassword"
           component={ForgotPasswordScreen}
