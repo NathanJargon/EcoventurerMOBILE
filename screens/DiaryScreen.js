@@ -22,13 +22,9 @@ export default function DiaryScreen({ navigation }) {
 
   useFocusEffect(
     useCallback(() => {
-      const fetchUsers = firebase.firestore().collection('users').get();
-      const fetchBanners = firebase.firestore().collection('banner').get();
-      const fetchBorders = firebase.firestore().collection('border').get();
-
-      Promise.all([fetchUsers, fetchBanners, fetchBorders])
-        .then(async ([usersSnapshot, bannersSnapshot, bordersSnapshot]) => {
-          const newUsers = usersSnapshot.docs.map((doc) => ({
+      const unsubscribeUsers = firebase.firestore().collection('users')
+        .onSnapshot(async (snapshot) => {
+          const newUsers = snapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data()
           }));
@@ -44,24 +40,34 @@ export default function DiaryScreen({ navigation }) {
             return user;
           }));
 
-          const newBanners = bannersSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-
-          const newBorders = bordersSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-
           setUsers(usersWithDiary);
-          setBanners(newBanners);
-          setBorders(newBorders);
           setIsLoading(false);
         });
 
+      const unsubscribeBanners = firebase.firestore().collection('banner')
+        .onSnapshot((snapshot) => {
+          const newItems = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+
+          setBanners(newItems);
+        });
+
+      const unsubscribeBorders = firebase.firestore().collection('border')
+        .onSnapshot((snapshot) => {
+          const newItems = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+
+          setBorders(newItems);
+        });
+
       return () => {
-        // Cleanup if needed
+        unsubscribeUsers();
+        unsubscribeBanners();
+        unsubscribeBorders();
       };
     }, [])
   );
