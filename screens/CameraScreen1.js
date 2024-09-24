@@ -520,7 +520,10 @@ export default function CameraScreen1({ route, navigation }) {
   };
 
   const handleMinigame = async () => {
-    navigation.navigate('Minigame');
+    navigation.navigate('Minigame', { 
+      level: currentLevel,
+      levelName: 'Pollution' // Add the levelName parameter here
+    });
   };
 
   useEffect(() => {

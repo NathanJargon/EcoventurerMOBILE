@@ -8,7 +8,11 @@ const { width, height } = Dimensions.get('window');
 const imageExists = async (url) => {
   try {
     const response = await fetch(url);
-    return response.ok;
+    if (response.ok) {
+      console.log(`Valid image URL: ${url}`);
+      return true;
+    }
+    return false;
   } catch (error) {
     return false;
   }
@@ -164,7 +168,6 @@ export default function DiaryScreen({ navigation }) {
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {

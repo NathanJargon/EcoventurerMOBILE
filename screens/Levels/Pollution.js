@@ -310,7 +310,7 @@ export default function Pollution({ navigation }) {
             if (index < levelProgress[1] ) {
               Alert.alert(
                 'Rechallenge?',
-                'You have already completed this challenge. Would you try again?',
+                'You have already completed this challenge. Would you try again?\nWarning: This will increase your progress level.',
                 [
                   {
                     text: 'No',

@@ -4,7 +4,8 @@ import { firebase } from '../FirebaseConfig';
 
 const { width, height } = Dimensions.get('window');
 
-export default function Minigame({ navigation }) {
+export default function Minigame({ navigation, route }) {
+    const { level, levelName } = route.params;
     const [cards, setCards] = useState([
         { id: 1, value: 'apple', flipped: false, image: require('../../assets/apple.png') },
         { id: 2, value: 'pineapple', flipped: false, image: require('../../assets/pineapple.png') },
@@ -96,11 +97,11 @@ export default function Minigame({ navigation }) {
 
             Alert.alert(
                 "Game Over!",
-                `You guessed ${matchedCards.length / 2} pairs and earned ${points} points. You will be redirected back to main menu to load current data.`,
+                `You guessed ${matchedCards.length / 2} pairs and earned ${points} points. You will be redirected back to ${level === 10 ? 'main menu' : 'game'} to load current data.`,
                 [
                     {
                         text: "OK",
-                        onPress: () => navigation.navigate('Home')
+                        onPress: () => navigation.navigate(level === 10 ? 'Home' : levelName)
                     }
                 ],
                 { cancelable: false }

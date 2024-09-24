@@ -80,23 +80,22 @@ export default function LeaderboardScreen({ navigation }) {
           <Text style={styles.leaderboardText}>Leaderboard</Text>
         </View>
       </View>
-        <FlatList
-          data={users}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item, index }) => (
-            <View style={{ ...styles.smallButton, backgroundColor: getColor(index), width: getWidth(index), flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', height: height * 0.125, paddingLeft: 10 }}>
-              {getMedalIcon(index) && <Image source={getMedalIcon(index)} style={{ width: 60, height: 60, marginLeft: 10, }} />}
-              <View style={{ marginLeft: 10 }}>
-                <Text style={styles.smallButtonText1}>{item.name}</Text>
-                <Text style={styles.smallButtonText}>{item.points} points</Text>
-              </View>
+      <FlatList
+        data={users}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item, index }) => (
+          <View style={{ ...styles.smallButton, backgroundColor: getColor(index), width: getWidth(index), flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', height: height * 0.125, paddingLeft: 10 }}>
+            {getMedalIcon(index) && <Image source={getMedalIcon(index)} style={{ width: 60, height: 60, marginLeft: 10 }} />}
+            <View style={{ marginLeft: 10, maxWidth: '70%' }}>
+              <Text style={styles.smallButtonText1} numberOfLines={1} ellipsizeMode="tail">{item.name}</Text>
+              <Text style={styles.smallButtonText}>{item.points} points</Text>
             </View>
-          )}
-        />
+          </View>
+        )}
+      />
     </View>
   );
-};
-
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -131,11 +130,6 @@ const styles = StyleSheet.create({
   backButtonImage: {
     width: 50,
     height: 50,
-  },
-  image: {
-    width: '100%',
-    height: '80%',
-    resizeMode: 'cover',
   },
   playButton: {
     backgroundColor: '#3b5a9d',
