@@ -93,7 +93,7 @@ export default function CameraScreen2({ route, navigation }) {
   
         let formData = new FormData();
         let candidateLabels = "Plastic Bottles,Trash,Dirty Water,Car Exhaust,Unused Tires,Motorcycle Emission,Used Facemask,Straws and Utensils,Plastic Bags,Unused Appliances,Bird,Butterfly,Mango Tree,Indoor Plant,Outdoor Plant,Flower,Grass,Leaves,Cat,Dog,Plastic Bottles inside the Trashcan,Trashcan,AA Battery,Phone Charging Cables,Unused Cardboard Boxes,Reusable Bag,Aluminum Can,Tumbler,Newspaper,Food Container".split(',');
-
+  
         addNameIfNotExists(currentName, candidateLabels);
         
         let candidateLabelsString = candidateLabels.join(',');
@@ -140,7 +140,7 @@ export default function CameraScreen2({ route, navigation }) {
             console.log("currentName:", currentName);
             console.log("imageUrl:", imageUrl);
   
-            if (existingEntryIndex !== -1) {
+            if (isCorrect && existingEntryIndex !== -1) {
               Alert.alert(
                 "Replace existing entry?",
                 "An entry for this item already exists in your diary. Do you want to replace it with the new image?",
@@ -213,7 +213,16 @@ export default function CameraScreen2({ route, navigation }) {
               setIsAnalyzing(false);
             }
   
-            if (!isCorrect) {
+            if (isCorrect) {
+              const doc = await docRef.get();
+              if (doc.exists) {
+                const currentPoints = doc.data().points || 0;
+                const newPoints = currentPoints + 50;
+                await docRef.update({
+                  points: newPoints,
+                });
+              }
+            } else {
               await ref.delete();
               console.log("Image deleted from Firebase Storage");
             }
@@ -277,7 +286,7 @@ export default function CameraScreen2({ route, navigation }) {
   
         let formData = new FormData();
         let candidateLabels = "Plastic Bottles,Trash,Dirty Water,Car Exhaust,Unused Tires,Motorcycle Emission,Used Facemask,Straws and Utensils,Plastic Bags,Unused Appliances,Bird,Butterfly,Mango Tree,Indoor Plant,Outdoor Plant,Flower,Grass,Leaves,Cat,Dog,Plastic Bottles inside the Trashcan,Trashcan,AA Battery,Phone Charging Cables,Unused Cardboard Boxes,Reusable Bag,Aluminum Can,Tumbler,Newspaper,Food Container".split(',');
-
+  
         addNameIfNotExists(currentName, candidateLabels);
         
         let candidateLabelsString = candidateLabels.join(',');
@@ -324,7 +333,7 @@ export default function CameraScreen2({ route, navigation }) {
             console.log("currentName:", currentName);
             console.log("imageUrl:", imageUrl);
   
-            if (existingEntryIndex !== -1) {
+            if (isCorrect && existingEntryIndex !== -1) {
               Alert.alert(
                 "Replace existing entry?",
                 "An entry for this item already exists in your diary. Do you want to replace it with the new image?",
@@ -397,7 +406,16 @@ export default function CameraScreen2({ route, navigation }) {
               setIsAnalyzing(false);
             }
   
-            if (!isCorrect) {
+            if (isCorrect) {
+              const doc = await docRef.get();
+              if (doc.exists) {
+                const currentPoints = doc.data().points || 0;
+                const newPoints = currentPoints + 50;
+                await docRef.update({
+                  points: newPoints,
+                });
+              }
+            } else {
               await ref.delete();
               console.log("Image deleted from Firebase Storage");
             }
@@ -432,6 +450,7 @@ export default function CameraScreen2({ route, navigation }) {
       setIsAnalyzing(false);
     }
   };
+  
   
   
   useEffect(() => {

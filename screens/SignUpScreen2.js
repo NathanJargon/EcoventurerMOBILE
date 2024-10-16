@@ -82,6 +82,7 @@ export default function SignUpScreen2({ navigation }) {
             currentChallenge: 0,
               currentBanner: defaultBanner,
               currentBorder: defaultBorder,
+            role: 'User',
           };
           const usersRef = firebase.firestore().collection('users');
           usersRef

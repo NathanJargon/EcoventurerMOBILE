@@ -24,9 +24,11 @@ export default function LoginScreen({ navigation }) {
           .auth()
           .signInWithEmailAndPassword(savedEmail, savedPassword)
           .then((response) => {
+            console.log('Auto login successful:', response);
             navigation.navigate('Home');
           })
           .catch((error) => {
+            console.error('Auto login error:', error);
             // Handle login error here
           });
       }
@@ -42,12 +44,13 @@ export default function LoginScreen({ navigation }) {
     return () => authListener();
   }, []);
 
-  
   const onLogin = () => {
+    console.log('Attempting login with email:', email, 'and password:', password);
     firebase
       .auth()
       .signInWithEmailAndPassword(email, password)
       .then((response) => {
+        console.log('Login successful:', response);
         if (remember) {
           AsyncStorage.setItem('email', email);
           AsyncStorage.setItem('password', password);
@@ -58,6 +61,7 @@ export default function LoginScreen({ navigation }) {
         navigation.navigate('Home');
       })
       .catch((error) => {
+        console.error('Login error:', error);
         switch (error.code) {
           case 'auth/invalid-email':
             alert('The email address is badly formatted.');
@@ -77,8 +81,6 @@ export default function LoginScreen({ navigation }) {
       });
   };
 
-
-  
   return (
     <View style={styles.container}>
       <View style={styles.bottomBox}>
@@ -101,10 +103,10 @@ export default function LoginScreen({ navigation }) {
         />
         <View style={styles.row}>
           <View style={styles.row}>
-                <Checkbox
-                  status={remember ? 'checked' : 'unchecked'}
-                  onPress={() => setRemember(!remember)}
-                />
+            <Checkbox
+              status={remember ? 'checked' : 'unchecked'}
+              onPress={() => setRemember(!remember)}
+            />
             <Text onPress={() => setRemember(!remember)}>Remember me</Text>
           </View>
           <Text onPress={() => navigation.navigate('ForgotPassword')}>Forgot password?</Text>
@@ -112,7 +114,7 @@ export default function LoginScreen({ navigation }) {
         <TouchableOpacity style={styles.button} onPress={onLogin}>
           <Text style={styles.buttonText}>LOGIN</Text>
         </TouchableOpacity>
-          <View style={styles.bottomRow}>
+        <View style={styles.bottomRow}>
           <Text>Don't have an account?</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Signup2')}>
             <Text style={styles.signUpText}>SIGN UP</Text>
