@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Image, ImageBackground, View, TouchableOpacity, Text, StyleSheet, Dimensions } from 'react-native';
+import { Image, ImageBackground, View, TouchableOpacity, Text, StyleSheet, Dimensions, Keyboard } from 'react-native';
 import { Checkbox, TextInput } from 'react-native-paper';
 import { firebase } from './FirebaseConfig';
 import { useNavigation } from '@react-navigation/native';
@@ -11,6 +11,7 @@ export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
+  const [logoOpacity, setLogoOpacity] = useState(1); // State for logo opacity
 
   useEffect(() => {
     const checkLogin = async () => {
@@ -41,7 +42,19 @@ export default function LoginScreen({ navigation }) {
       }
     });
 
-    return () => authListener();
+    // Listen for keyboard events
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      setLogoOpacity(0); // Hide logo when keyboard is shown
+    });
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      setLogoOpacity(1); // Show logo when keyboard is hidden
+    });
+
+    return () => {
+      authListener();
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
   }, []);
 
   const onLogin = () => {
@@ -103,7 +116,7 @@ export default function LoginScreen({ navigation }) {
     <View style={styles.container}>
         <Image
           source={require('../assets/adaptive-icon.png')}
-          style={styles.logo}
+          style={[styles.logo, { opacity: logoOpacity }]} // Adjust opacity based on state
         />
       <View style={styles.bottomBox}>
         <TextInput

@@ -149,7 +149,6 @@ export default function CameraScreen2({ route, navigation, ttsVolume }) {
             console.log("existingEntryIndex:", existingEntryIndex);
             console.log("currentName:", currentName);
             console.log("imageUrl:", imageUrl);
-            speakDescription(route.params.object.description);
   
             if (isCorrect && existingEntryIndex !== -1) {
               Alert.alert(
@@ -225,6 +224,7 @@ export default function CameraScreen2({ route, navigation, ttsVolume }) {
             }
   
             if (isCorrect) {
+              speakDescription(route.params.object.description);
               const doc = await docRef.get();
               if (doc.exists) {
                 const currentPoints = doc.data().points || 0;
@@ -343,7 +343,6 @@ export default function CameraScreen2({ route, navigation, ttsVolume }) {
             console.log("existingEntryIndex:", existingEntryIndex);
             console.log("currentName:", currentName);
             console.log("imageUrl:", imageUrl);
-            speakDescription(route.params.object.description);
   
             if (isCorrect && existingEntryIndex !== -1) {
               Alert.alert(
@@ -419,6 +418,7 @@ export default function CameraScreen2({ route, navigation, ttsVolume }) {
             }
   
             if (isCorrect) {
+              speakDescription(route.params.object.description);
               const doc = await docRef.get();
               if (doc.exists) {
                 const currentPoints = doc.data().points || 0;
@@ -632,7 +632,7 @@ export default function CameraScreen2({ route, navigation, ttsVolume }) {
                 <Text style={styles.descriptionText}>{route.params.object.description}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[ styles.button2, { height: '15%', } ]} 
+                style={[ styles.button2, { height: '15%', zIndex: 2 } ]} 
                 onPress={handleMinigame}
               >
                 <Text style={styles.buttonText}>NEXT MINIGAME</Text>
@@ -646,6 +646,16 @@ export default function CameraScreen2({ route, navigation, ttsVolume }) {
             </TouchableOpacity>
           )}
         </View>
+
+          {isCorrect && (
+          <View style={styles.overlayContainer}>
+            <Image source={require('../assets/char.png')} style={styles.overlayImage} />
+            <View style={styles.overlayTextContainer}>
+              <Text style={styles.overlayText}>Did you know that...</Text>
+            </View>
+          </View>
+        )}
+
       </View>
   );
 }
@@ -745,6 +755,7 @@ const styles = StyleSheet.create({
     left: width * 0.075,
     flexDirection: 'row',
     alignItems: 'center',
+    zIndex: 2,
   },
   smallButton: {
     backgroundColor: '#4fb2aa',
@@ -821,6 +832,34 @@ const styles = StyleSheet.create({
   descriptionText: {
     color: '#fff',
     fontSize: width * 0.03,
+    fontWeight: 'bold',
+  },
+  overlayContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overlayImage: {
+    width: '30%',
+    height: '50%',
+    resizeMode: 'contain',
+  },
+  overlayTextContainer: {
+    position: 'absolute',
+    bottom: height * 0.375, 
+    left: 0,
+    right: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overlayText: {
+    color: 'white',
+    fontSize: 15,
     fontWeight: 'bold',
   },
 });
