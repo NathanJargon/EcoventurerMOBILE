@@ -12,7 +12,7 @@ export default function CameraScreen({ route, navigation, ttsVolume }) {
   const { object, trashes } = route.params;
   const { challengeNumber, trash, description } = object;
   const { name, level } = trash;
-  const [isCorrect, setIsCorrect] = useState(true);
+  const [isCorrect, setIsCorrect] = useState(null);
   const [image, setImage] = useState(null);
   const [apiResult, setApiResult] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -154,6 +154,7 @@ export default function CameraScreen({ route, navigation, ttsVolume }) {
             console.log("existingEntryIndex:", existingEntryIndex);
             console.log("currentName:", currentName);
             console.log("imageUrl:", imageUrl);
+            speakDescription(route.params.object.description);
   
             if (isCorrect && existingEntryIndex !== -1) {
               Alert.alert(
@@ -347,6 +348,7 @@ export default function CameraScreen({ route, navigation, ttsVolume }) {
             console.log("existingEntryIndex:", existingEntryIndex);
             console.log("currentName:", currentName);
             console.log("imageUrl:", imageUrl);
+            speakDescription(route.params.object.description);
   
             if (isCorrect && existingEntryIndex !== -1) {
               Alert.alert(

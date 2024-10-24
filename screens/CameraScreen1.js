@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import { firebase } from './FirebaseConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Speech from 'expo-speech';
 
 const { width, height } = Dimensions.get('window');
 
@@ -148,6 +149,7 @@ export default function CameraScreen1({ route, navigation, ttsVolume }) {
             console.log("existingEntryIndex:", existingEntryIndex);
             console.log("currentName:", currentName);
             console.log("imageUrl:", imageUrl);
+            speakDescription(route.params.object.description);
   
             if (isCorrect && existingEntryIndex !== -1) {
               Alert.alert(
@@ -341,6 +343,7 @@ export default function CameraScreen1({ route, navigation, ttsVolume }) {
             console.log("existingEntryIndex:", existingEntryIndex);
             console.log("currentName:", currentName);
             console.log("imageUrl:", imageUrl);
+            speakDescription(route.params.object.description);
   
             if (isCorrect && existingEntryIndex !== -1) {
               Alert.alert(
