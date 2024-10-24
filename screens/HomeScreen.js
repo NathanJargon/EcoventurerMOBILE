@@ -6,7 +6,30 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
-const InfoModal = ({ visible, onClose }) => (
+const helpContent = [
+  {
+    image: require('../assets/help/HomeScreen.jpg'),
+    description: 'Home Screen\n\no To start playing, click “Play Game” or view other pages of the application.',
+  },
+  {
+    image: require('../assets/help/Diary.jpg'),
+    description: 'Diary\n\no If you’re a new player, choose Module #1 and start Challenge #1. Other modules will be unlocked once you complete all the challenges and answer the quiz.',
+  },
+  {
+    image: require('../assets/help/Take a Photo .jpg'),
+    description: 'Take a Photo\n\no Capture or upload a photo of the required object.',
+  },
+  {
+    image: require('../assets/help/Result Of Analyzed Image.jpg'),
+    description: 'Result Of Analyzed Image\n\no The AI Image Classifier will analyze and validate the image captured by the uploaded image. Once the image is correct, a short description of the item will display and you can proceed to the next challenges.',
+  },
+  {
+    image: require('../assets/help/Quiz .jpg'),
+    description: 'Quiz\n\no After completing all ten (10) challenges, you are required to answer and pass the quiz assessment! Passing percentage is 50%.',
+  },
+];
+
+const InfoModal = ({ visible, onClose, currentIndex, setCurrentIndex }) => (
   <Modal
     animationType="slide"
     transparent={true}
@@ -15,8 +38,23 @@ const InfoModal = ({ visible, onClose }) => (
   >
     <View style={styles.modalOverlay}>
       <View style={styles.modalContainer}>
-        <Text style={styles.modalText}>This is some information about the game.</Text>
-        <TouchableOpacity style={styles.modalButton} onPress={onClose}>
+        <Image source={helpContent[currentIndex].image} style={styles.helpImage} />
+        <Text style={styles.modalText}>{helpContent[currentIndex].description}</Text>
+        <View style={styles.modalButtonContainer}>
+          <TouchableOpacity
+            style={styles.modalButton}
+            onPress={() => setCurrentIndex((currentIndex - 1 + helpContent.length) % helpContent.length)}
+          >
+            <Text style={styles.modalButtonText}>Previous</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.modalButton}
+            onPress={() => setCurrentIndex((currentIndex + 1) % helpContent.length)}
+          >
+            <Text style={styles.modalButtonText}>Next</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity style={styles.modalCloseButton} onPress={onClose}>
           <Text style={styles.modalButtonText}>Close</Text>
         </TouchableOpacity>
       </View>
@@ -26,6 +64,7 @@ const InfoModal = ({ visible, onClose }) => (
 
 export default function HomeScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     const backAction = async () => {
@@ -90,7 +129,12 @@ export default function HomeScreen({ navigation }) {
           <Image source={require('../assets/i.png')} style={styles.infoIcon} />
         </TouchableOpacity>
       </View>
-      <InfoModal visible={modalVisible} onClose={() => setModalVisible(false)} />
+      <InfoModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        currentIndex={currentIndex}
+        setCurrentIndex={setCurrentIndex}
+      />
     </ImageBackground>
   );
 }
@@ -146,8 +190,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     position: 'absolute',
-    bottom: 10,
-    right: 10,
+    bottom: 20,
+    right: 20,
   },
   smallButton: {
     backgroundColor: '#4fb2aa',
@@ -195,10 +239,22 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
   },
+  helpImage: {
+    width: '100%',
+    height: 200,
+    resizeMode: 'contain',
+    marginBottom: 20,
+  },
   modalText: {
-    fontSize: 18,
+    fontSize: 17,
     marginBottom: 20,
     textAlign: 'center',
+  },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 20,
   },
   modalButton: {
     backgroundColor: '#4fb2aa',
@@ -206,10 +262,19 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
+    width: '45%',
   },
   modalButtonText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  modalCloseButton: {
+    backgroundColor: '#4fb2aa',
+    padding: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
 });
